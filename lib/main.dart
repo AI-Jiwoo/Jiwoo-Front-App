@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_page.dart';
-import 'join_page.dart';  // 새로 만든 JoinPage를 import
+import 'join_page.dart';
+import 'my_page.dart';  // MyPage를 import
 
 void main() {
   runApp(MyApp());
@@ -9,29 +10,54 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    print('Building MyApp'); // 디버그 출력
     return MaterialApp(
       title: 'Login App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      initialRoute: '/',  // 초기 라우트 설정
+      initialRoute: '/',
       routes: {
-        '/': (context) => LoginPage(),  // 루트 경로를 LoginPage로 설정
-        '/home': (context) => HomePage(),
-        '/join': (context) => JoinPage(),  // 실제 JoinPage 사용
+        '/': (context) {
+          print('Navigating to LoginPage'); // 디버그 출력
+          return LoginPage();
+        },
+        '/home': (context) {
+          print('Navigating to HomePage'); // 디버그 출력
+          return HomePage();
+        },
+        '/join': (context) {
+          print('Navigating to JoinPage'); // 디버그 출력
+          return JoinPage();
+        },
+        '/mypage': (context) {
+          print('Navigating to MyPage'); // 디버그 출력
+          return MyPage();
+        },
       },
     );
   }
 }
 
-// 임시 HomePage (나중에 실제 홈 페이지로 교체해야 합니다)
 class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    print('Building HomePage'); // 디버그 출력
     return Scaffold(
       appBar: AppBar(title: Text('Home')),
-      body: Center(child: Text('Welcome to Home Page')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Welcome to Home Page'),
+            ElevatedButton(
+              child: Text('Go to My Page'),
+              onPressed: () => Navigator.pushNamed(context, '/mypage'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
