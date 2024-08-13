@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:jiwoo_front_app/terms_and_privacy.dart';
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
 class JoinPage extends StatefulWidget {
@@ -20,6 +20,25 @@ class _JoinPageState extends State<JoinPage> {
   DateTime? _birthDate;
   bool _isEmailVerified = false;
   bool _isLoading = false;
+
+  Widget buildTermsContainer(BuildContext context, String content) {
+    return Container(
+      height: 200,
+      decoration: BoxDecoration(
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(8),
+        child: Text(
+          content,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ),
+    );
+  }
+
+
 
   Future<void> _checkEmail() async {
     if (_email.isEmpty) {
@@ -92,6 +111,16 @@ class _JoinPageState extends State<JoinPage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Widget _buildButton({required String text, required VoidCallback? onPressed}) {
+    return FilledButton(
+      onPressed: onPressed,
+      child: Text(text),
+      style: FilledButton.styleFrom(
+        minimumSize: Size(double.infinity, 50),
+      ),
+    );
+  }
+
   Widget _buildTermsStep() {
     return Card(
       elevation: 4,
@@ -108,14 +137,16 @@ class _JoinPageState extends State<JoinPage> {
               value: _termsAgreed,
               onChanged: (value) => setState(() => _termsAgreed = value!),
             ),
-            _buildTermsContainer('이용약관 내용...'),
+            // 이용약관 텍스트를 호출
+            buildTermsContainer(context, termsText),
             SizedBox(height: 16),
             _buildCheckboxTile(
               title: '개인정보 이용약관 동의 (필수)',
               value: _privacyAgreed,
               onChanged: (value) => setState(() => _privacyAgreed = value!),
             ),
-            _buildTermsContainer('개인정보 약관 내용...'),
+            // 개인정보 처리방침 텍스트를 호출
+            buildTermsContainer(context, privacyText),
             SizedBox(height: 24),
             _buildButton(
               text: '다음단계',
@@ -129,10 +160,11 @@ class _JoinPageState extends State<JoinPage> {
     );
   }
 
+
   Widget _buildInfoStep() {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surfaceVariant,
       child: Padding(
         padding: EdgeInsets.all(16.0),
         child: Form(
@@ -140,7 +172,7 @@ class _JoinPageState extends State<JoinPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('회원정보', style: Theme.of(context).textTheme.headlineSmall),
+              Text('회원정보', style: Theme.of(context).textTheme.titleLarge),
               SizedBox(height: 16),
               _buildTextField(
                 label: '이름',
@@ -166,7 +198,6 @@ class _JoinPageState extends State<JoinPage> {
                     onPressed: _checkEmail,
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: Colors.blue,
                     ),
                   ),
                 ],
@@ -181,7 +212,13 @@ class _JoinPageState extends State<JoinPage> {
               SizedBox(height: 16),
               _buildDateField(),
               SizedBox(height: 24),
-              _buildButton(text: '가입완료', onPressed: _signUp),
+              FilledButton(
+                onPressed: _signUp,
+                child: Text('가입완료'),
+                style: FilledButton.styleFrom(
+                  minimumSize: Size(double.infinity, 50),
+                ),
+              ),
             ],
           ),
         ),
@@ -191,23 +228,29 @@ class _JoinPageState extends State<JoinPage> {
 
   Widget _buildCompletionStep() {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surfaceVariant,
       child: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Icon(Icons.check_circle_outline, size: 80, color: Colors.green),
+            Icon(Icons.check_circle_outline,
+                size: 80,
+                color: Theme.of(context).colorScheme.primary),
             SizedBox(height: 16),
-            Text('가입이 완료되었습니다!', style: Theme.of(context).textTheme.headlineSmall),
+            Text('가입이 완료되었습니다!',
+                style: Theme.of(context).textTheme.headlineSmall),
             SizedBox(height: 8),
             Text('가입해 주셔서 감사합니다. 더 나은 서비스로 보답하겠습니다.'),
             SizedBox(height: 24),
-            _buildButton(
-              text: '로그인하기',
+            FilledButton(
               onPressed: () {
                 Navigator.of(context).pushNamedAndRemoveUntil('/', (Route<dynamic> route) => false);
               },
+              child: Text('로그인하기'),
+              style: FilledButton.styleFrom(
+                minimumSize: Size(double.infinity, 50),
+              ),
             ),
           ],
         ),
@@ -221,7 +264,7 @@ class _JoinPageState extends State<JoinPage> {
       value: value,
       onChanged: onChanged,
       controlAffinity: ListTileControlAffinity.leading,
-      activeColor: Colors.blue,
+      activeColor: Theme.of(context).colorScheme.primary,
     );
   }
 
@@ -229,8 +272,8 @@ class _JoinPageState extends State<JoinPage> {
     return Container(
       height: 100,
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: SingleChildScrollView(
         padding: EdgeInsets.all(8),
@@ -248,9 +291,9 @@ class _JoinPageState extends State<JoinPage> {
     return TextFormField(
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
-        fillColor: Colors.grey.shade100,
+        fillColor: Theme.of(context).colorScheme.surface,
       ),
       obscureText: obscureText,
       onChanged: onChanged,
@@ -262,9 +305,9 @@ class _JoinPageState extends State<JoinPage> {
     return TextFormField(
       decoration: InputDecoration(
         labelText: '생년월일',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
-        fillColor: Colors.grey.shade100,
+        fillColor: Theme.of(context).colorScheme.surface,
         suffixIcon: Icon(Icons.calendar_today),
       ),
       onTap: () async {
@@ -286,25 +329,14 @@ class _JoinPageState extends State<JoinPage> {
     );
   }
 
-  Widget _buildButton({required String text, required VoidCallback? onPressed}) {
-    return ElevatedButton(
-      child: Text(text),
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        minimumSize: Size(double.infinity, 50),
-        backgroundColor: Colors.blue,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('회원가입'),
         elevation: 0,
-        backgroundColor: Colors.blue,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
       ),
       body: SafeArea(
         child: Stepper(

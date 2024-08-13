@@ -327,7 +327,9 @@ class _MyPageState extends State<MyPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('마이페이지'),
-        backgroundColor: Color(0xFF007BFF),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
+        elevation: 0,
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
@@ -349,14 +351,19 @@ class _MyPageState extends State<MyPage> {
 
   Widget _buildUserInfoSection() {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: Theme.of(context).colorScheme.surfaceVariant,
       child: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('기본정보', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            Text('기본정보',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant
+                )
+            ),
             SizedBox(height: 16),
             _buildInfoItem('이메일', userInfo['email'] ?? ''),
             _buildInfoItem('이름', userInfo['name'] ?? ''),
@@ -373,17 +380,17 @@ class _MyPageState extends State<MyPage> {
                   onPressed: showPasswordChangeModal,
                   child: Text('비밀번호 변경'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF007BFF),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
                   ),
                 ),
                 SizedBox(width: 8),
-                ElevatedButton(
+                FilledButton(
                   onPressed: handleSaveInfo,
                   child: Text('저장'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF28A745),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
               ],
@@ -401,11 +408,11 @@ class _MyPageState extends State<MyPage> {
         children: [
           Expanded(
             flex: 2,
-            child: Text(label, style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(label, style: Theme.of(context).textTheme.titleMedium),
           ),
           Expanded(
             flex: 3,
-            child: Text(value),
+            child: Text(value, style: Theme.of(context).textTheme.bodyLarge),
           ),
         ],
       ),
@@ -419,7 +426,7 @@ class _MyPageState extends State<MyPage> {
         children: [
           Expanded(
             flex: 2,
-            child: Text(label, style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(label, style: Theme.of(context).textTheme.titleMedium),
           ),
           Expanded(
             flex: 3,
@@ -427,8 +434,13 @@ class _MyPageState extends State<MyPage> {
               controller: TextEditingController(text: value),
               onChanged: onChanged,
               decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                filled: true,
+                fillColor: Theme.of(context).colorScheme.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
             ),
           ),
@@ -436,6 +448,7 @@ class _MyPageState extends State<MyPage> {
       ),
     );
   }
+
 
   Widget _buildDatePickerItem(String label, dynamic date) {
     // date가 String인 경우 DateTime으로 변환
@@ -456,7 +469,7 @@ class _MyPageState extends State<MyPage> {
         children: [
           Expanded(
             flex: 2,
-            child: Text(label, style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(label, style: Theme.of(context).textTheme.titleMedium),
           ),
           Expanded(
             flex: 3,
@@ -494,7 +507,7 @@ class _MyPageState extends State<MyPage> {
         children: [
           Expanded(
             flex: 2,
-            child: Text('성별', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text('성별', style: Theme.of(context).textTheme.titleMedium),
           ),
           Expanded(
             flex: 3,
@@ -508,8 +521,13 @@ class _MyPageState extends State<MyPage> {
                 setState(() => userInfo['gender'] = value);
               },
               decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                filled: true,
+                fillColor: Theme.of(context).colorScheme.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
             ),
           ),
@@ -522,17 +540,21 @@ class _MyPageState extends State<MyPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('사업정보', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        Text('사업정보',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface
+            )
+        ),
         SizedBox(height: 16),
         ...businessInfos.map((info) => _buildBusinessCard(info)).toList(),
         SizedBox(height: 16),
-        ElevatedButton.icon(
+        FilledButton.icon(
           onPressed: showAddBusinessForm,
           icon: Icon(Icons.add),
           label: Text('사업 추가'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF007BFF),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          style: FilledButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.secondary,
+            foregroundColor: Theme.of(context).colorScheme.onSecondary,
           ),
         ),
       ],
@@ -542,6 +564,9 @@ class _MyPageState extends State<MyPage> {
   Widget _buildBusinessCard(Map<String, dynamic> info) {
     return Card(
       margin: EdgeInsets.only(bottom: 16),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: Theme.of(context).colorScheme.surfaceVariant,
       child: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
@@ -553,20 +578,16 @@ class _MyPageState extends State<MyPage> {
                 Expanded(
                   child: Text(
                     info['businessName'] ?? '',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF17A2B8),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    _getBusinessScaleText(info['businessScale']),
-                    style: TextStyle(color: Colors.white, fontSize: 12),
-                  ),
+                Chip(
+                  label: Text(_getBusinessScaleText(info['businessScale'])),
+                  backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                  labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSecondaryContainer),
                 ),
               ],
             ),
@@ -589,16 +610,21 @@ class _MyPageState extends State<MyPage> {
         children: [
           Expanded(
             flex: 2,
-            child: Text(label, style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(label, style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant
+            )),
           ),
           Expanded(
             flex: 3,
-            child: Text(value),
+            child: Text(value, style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant
+            )),
           ),
         ],
       ),
     );
   }
+
 
   String _getBusinessScaleText(String? scale) {
     switch (scale) {

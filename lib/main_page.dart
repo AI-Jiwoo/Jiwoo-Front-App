@@ -12,6 +12,8 @@ void main() {
   runApp(MyApp());
 }
 
+
+
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -121,17 +123,28 @@ class HomeTab extends StatelessWidget {
                 FeatureCard(
                   title: '창업 가이드',
                   description: 'AI 기반 맞춤형 창업 전략',
-                  icon: Icons.lightbulb,
+                  icon: Icons.lightbulb, onTap: () {},
                 ),
                 FeatureCard(
                   title: '비즈니스 모델',
                   description: '혁신적인 비즈니스 모델 설계',
                   icon: Icons.business,
-                ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => BusinessModelPage()),
+                    );
+                  },                ),
                 FeatureCard(
                   title: '시장 조사',
                   description: 'AI 기반 시장 트렌드 분석',
                   icon: Icons.trending_up,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => MarketResearchPage()),
+                    );
+                  },
                 ),
               ],
             ),
@@ -146,12 +159,14 @@ class FeatureCard extends StatelessWidget {
   final String title;
   final String description;
   final IconData icon;
+  final VoidCallback onTap;
 
   const FeatureCard({
     Key? key,
     required this.title,
     required this.description,
     required this.icon,
+    required this.onTap,
   }) : super(key: key);
 
   @override
@@ -163,6 +178,7 @@ class FeatureCard extends StatelessWidget {
         title: Text(title),
         subtitle: Text(description),
         trailing: Icon(Icons.arrow_forward_ios),
+        onTap: onTap,
       ),
     );
   }
