@@ -41,8 +41,7 @@ class _LoginPageState extends State<LoginPage> {
 
       try {
         final response = await http.post(
-          // Uri.parse('http://10.0.2.2:5000/login'), // Android 에뮬레이터용
-          Uri.parse('http://localhost:5000/login'), // iOS 시뮬레이터용
+          Uri.parse('http://localhost:5000/login'),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
@@ -50,7 +49,7 @@ class _LoginPageState extends State<LoginPage> {
             'email': _email,
             'password': _password,
           }),
-        ).timeout(Duration(seconds: 10)); // 10초 타임아웃 설정
+        ).timeout(Duration(seconds: 10));
 
         if (response.statusCode == 200) {
           final token = response.headers['authorization'];
@@ -58,19 +57,16 @@ class _LoginPageState extends State<LoginPage> {
             final jwt = token.substring(7);
             final decodedToken = Jwt.parseJwt(jwt);
 
-            // Save tokens
             SharedPreferences prefs = await SharedPreferences.getInstance();
             await prefs.setString('access-token', jwt);
             await prefs.setString('refresh-token', jwt);
 
-            // Save email if remember me is checked
             if (_rememberMe) {
               await prefs.setString('savedEmail', _email);
             } else {
               await prefs.remove('savedEmail');
             }
 
-            // Navigate to home page
             Navigator.of(context).pushReplacementNamed('/home');
           } else {
             throw Exception('Invalid token received');
@@ -79,7 +75,7 @@ class _LoginPageState extends State<LoginPage> {
           throw Exception('Login failed: ${response.statusCode} - ${response.body}');
         }
       } catch (e) {
-        print('Login error: $e'); // 콘솔에 에러 출력
+        print('Login error: $e');
         String errorMessage = '로그인 실패: ';
         if (e is TimeoutException) {
           errorMessage += '서버 응답 시간 초과';
@@ -102,65 +98,100 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Text('로그인', style: Theme.of(context).textTheme.headlineMedium),                SizedBox(height: 48),
-                TextFormField(
-                  initialValue: _email,
-                  decoration: InputDecoration(labelText: '이메일'),
-                  validator: (value) => value!.isEmpty ? '이메일을 입력해주세요' : null,
-                  onChanged: (value) => setState(() => _email = value),
-                ),
-                SizedBox(height: 24),
-                TextFormField(
-                  obscureText: true,
-                  decoration: InputDecoration(labelText: '비밀번호'),
-                  validator: (value) => value!.isEmpty ? '비밀번호를 입력해주세요' : null,
-                  onChanged: (value) => setState(() => _password = value),
-                ),
-                SizedBox(height: 24),
-                Row(
-                  children: [
-                    Checkbox(
-                      value: _rememberMe,
-                      onChanged: (value) => setState(() => _rememberMe = value!),
-                    ),
-                    Text('아이디 저장'),
-                    Spacer(),
-                    TextButton(
-                      child: Text('아이디 찾기'),
-                      onPressed: () {/* TODO: Implement */},
-                    ),
-                    Text('|'),
-                    TextButton(
-                      child: Text('비밀번호 찾기'),
-                      onPressed: () {/* TODO: Implement */},
-                    ),
-                  ],
-                ),
-                SizedBox(height: 24),
-                ElevatedButton(
-                  child: _isLoading ? CircularProgressIndicator() : Text('로그인'),
-                  onPressed: _isLoading ? null : _login,
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(double.infinity, 50),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(24.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Text(
+                    'LOGIN',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                    textAlign: TextAlign.center,
                   ),
-                ),
-                SizedBox(height: 16),
-                OutlinedButton(
-                  child: Text('회원가입'),
-                  onPressed: () => Navigator.of(context).pushNamed('/join'),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: Size(double.infinity, 50),
+                  SizedBox(height: 48),
+                  TextFormField(
+                    initialValue: _email,
+                    decoration: InputDecoration(
+                      labelText: 'EMAIL',
+                      prefixIcon: Icon(Icons.email_outlined),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) => value!.isEmpty ? '이메일을 입력해주세요' : null,
+                    onChanged: (value) => setState(() => _email = value),
                   ),
-                ),
-              ],
+                  SizedBox(height: 16),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'PASSWORD',
+                      prefixIcon: Icon(Icons.lock_outline),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                    ),
+                    obscureText: true,
+                    validator: (value) => value!.isEmpty ? '비밀번호를 입력해주세요' : null,
+                    onChanged: (value) => setState(() => _password = value),
+                  ),
+                  SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: _rememberMe,
+                        onChanged: (value) => setState(() => _rememberMe = value!),
+                      ),
+                      Text('아이디 저장'),
+                      Spacer(),
+                      TextButton(
+                        child: Text('아이디 찾기'),
+                        onPressed: () {/* TODO: Implement */},
+                      ),
+                      Text('|'),
+                      TextButton(
+                        child: Text('비밀번호 찾기'),
+                        onPressed: () {/* TODO: Implement */},
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 24),
+                  ElevatedButton(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16.0),
+                      child: _isLoading
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text('로그인', style: TextStyle(fontSize: 18)),
+                    ),
+                    onPressed: _isLoading ? null : _login,
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  OutlinedButton(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16.0),
+                      child: Text('회원가입', style: TextStyle(fontSize: 18)),
+                    ),
+                    onPressed: () => Navigator.of(context).pushNamed('/join'),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

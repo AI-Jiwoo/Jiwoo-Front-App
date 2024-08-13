@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'login_page.dart';
-import 'join_page.dart';  // 새로 만든 JoinPage를 import
+import 'join_page.dart';
+import 'my_page.dart';
+import 'main_page.dart'; // 새로 만든 MainPage를 import
 
 void main() {
   runApp(MyApp());
@@ -9,29 +11,68 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    print('Building MyApp');
     return MaterialApp(
-      title: 'Login App',
+      title: 'Jiwoo AI Helper',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        useMaterial3: true, // Material 3 사용
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      initialRoute: '/',  // 초기 라우트 설정
+      initialRoute: '/',
       routes: {
-        '/': (context) => LoginPage(),  // 루트 경로를 LoginPage로 설정
-        '/home': (context) => HomePage(),
-        '/join': (context) => JoinPage(),  // 실제 JoinPage 사용
+        '/': (context) {
+          print('Navigating to LoginPage');
+          return LoginPage();
+        },
+        '/home': (context) {
+          print('Navigating to HomePage');
+          return HomePage();
+        },
+        '/join': (context) {
+          print('Navigating to JoinPage');
+          return JoinPage();
+        },
+        '/mypage': (context) {
+          print('Navigating to MyPage');
+          return MyPage();
+        },
+        '/home': (context) {
+          print('Navigating to MainPage');
+          return MainPage();
+        },
       },
     );
   }
 }
 
-// 임시 HomePage (나중에 실제 홈 페이지로 교체해야 합니다)
 class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    print('Building HomePage');
     return Scaffold(
-      appBar: AppBar(title: Text('Home')),
-      body: Center(child: Text('Welcome to Home Page')),
+      appBar: AppBar(
+        title: Text('Home'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Welcome to Home Page'),
+            SizedBox(height: 20),
+            ElevatedButton(
+              child: Text('Go to My Page'),
+              onPressed: () => Navigator.pushNamed(context, '/mypage'),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              child: Text('Go to Main Page'),
+              onPressed: () => Navigator.pushNamed(context, '/main'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
