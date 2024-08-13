@@ -501,7 +501,7 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('시장 조사'),
+        title: Text('시장 조사💹'),
         backgroundColor: Theme.of(context).colorScheme.surface,
         foregroundColor: Theme.of(context).colorScheme.onSurface,
         actions: [
@@ -520,7 +520,6 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('시장 조사💹', style: Theme.of(context).textTheme.headlineMedium),
             SizedBox(height: 16),
             _buildStepIndicator(),
             SizedBox(height: 16),
