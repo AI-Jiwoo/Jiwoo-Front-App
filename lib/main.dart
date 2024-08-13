@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_page.dart';
 import 'join_page.dart';
+import 'marketResearch_page.dart';
 import 'my_page.dart';
 import 'main_page.dart'; // 새로 만든 MainPage를 import
 
@@ -40,6 +41,10 @@ class MyApp extends StatelessWidget {
         '/home': (context) {
           print('Navigating to MainPage');
           return MainPage();
+        },
+        '/market_research': (context) {
+          print('Navigating to MarketResearchPage');
+          return MarketResearchPage();
         },
       },
     );
