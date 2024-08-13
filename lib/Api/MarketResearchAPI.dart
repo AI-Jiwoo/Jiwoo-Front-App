@@ -28,4 +28,74 @@ class MarketResearchApi {
       throw Exception('Failed to load businesses: ${response.statusCode}');
     }
   }
+
+  static Future<Map<String, dynamic>> analyzeMarketSize(String token, Map<String, dynamic> data) async {
+    final response = await http.post(
+      Uri.parse('http://localhost:5000/market-research/market-size-growth'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(data),
+    );
+
+    if (response.statusCode == 200) {
+      final decodedBody = utf8.decode(response.bodyBytes);
+      return jsonDecode(decodedBody)['data'];
+    } else {
+      throw Exception('Failed to analyze market size');
+    }
+  }
+
+
+  static Future<Map<String, dynamic>> analyzeSimilarServices(String token, Map<String, dynamic> data) async {
+    final response = await http.post(
+      Uri.parse('http://localhost:5000/market-research/similar-services-analysis'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(data),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body)['data'];
+    } else {
+      throw Exception('Failed to analyze similar services');
+    }
+  }
+
+  static Future<Map<String, dynamic>> analyzeTrendCustomerTechnology(String token, Map<String, dynamic> data) async {
+    final response = await http.post(
+      Uri.parse('http://localhost:5000/market-research/trend-customer-technology'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(data),
+    );
+
+    if (response.statusCode == 200) {
+      final decodedBody = utf8.decode(response.bodyBytes);
+      return jsonDecode(decodedBody)['data'];
+    } else {
+      throw Exception('Failed to analyze trend, customer, and technology');
+    }
+  }
+
+  static Future<void> saveHistory(String token, Map<String, dynamic> historyData) async {
+    final response = await http.post(
+      Uri.parse('http://localhost:5000/market-research/save-history'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(historyData),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to save history');
+    }
+  }
 }
+

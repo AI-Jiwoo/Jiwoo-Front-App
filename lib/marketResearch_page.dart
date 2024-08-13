@@ -15,6 +15,9 @@ class _MarketResearchPageState extends State<MarketResearchPage> {
   Map<String, dynamic>? _selectedBusiness;
   bool _isLoading = false;
   String? _error;
+  Map<String, dynamic>? _marketSizeGrowth;
+  Map<String, dynamic>? _similarServices;
+  Map<String, dynamic>? _trendCustomerTechnology;
 
   @override
   void initState() {
@@ -132,20 +135,121 @@ class _MarketResearchPageState extends State<MarketResearchPage> {
   }
 
   Future<void> _analyzeMarket(String type) async {
-    // TODO: Implement market analysis logic
-    print('Analyzing market: $type');
-    // After analysis is complete:
+    if (_selectedBusiness == null) {
+      setState(() {
+        _error = '사업을 선택해주세요.';
+      });
+      return;
+    }
+
     setState(() {
-      _currentStep = 2;
+      _isLoading = true;
+      _error = null;
     });
+
+    try {
+      final token = await _getToken();
+      final data = {
+        'id': _selectedBusiness!['id'],
+        'businessName': _selectedBusiness!['businessName'],
+        'businessNumber': _selectedBusiness!['businessNumber'],
+        'businessContent': _selectedBusiness!['businessContent'],
+        'businessLocation': _selectedBusiness!['businessLocation'],
+        'businessStartDate': _selectedBusiness!['businessStartDate'],
+        'businessPlatform': _selectedBusiness!['businessPlatform'] ?? '',
+        'businessScale': _selectedBusiness!['businessScale'] ?? '',
+        'investmentStatus': _selectedBusiness!['investmentStatus'] ?? '',
+        'customerType': _selectedBusiness!['customerType'] ?? '',
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      };
+
+      switch (type) {
+        case 'marketSize':
+          final response = await MarketResearchApi.analyzeMarketSize(token, data);
+          setState(() {
+            _marketSizeGrowth = response;
+          });
+          break;
+        case 'similarServices':
+          final response = await MarketResearchApi.analyzeSimilarServices(token, data);
+          setState(() {
+            _similarServices = response;
+          });
+          break;
+        case 'trendCustomerTechnology':
+          final response = await MarketResearchApi.analyzeTrendCustomerTechnology(token, data);
+          setState(() {
+            _trendCustomerTechnology = response;
+          });
+          break;
+        case 'all':
+          final responses = await Future.wait([
+            MarketResearchApi.analyzeMarketSize(token, data),
+            MarketResearchApi.analyzeSimilarServices(token, data),
+            MarketResearchApi.analyzeTrendCustomerTechnology(token, data),
+          ]);
+          setState(() {
+            _marketSizeGrowth = responses[0];
+            _similarServices = responses[1];
+            _trendCustomerTechnology = responses[2];
+          });
+          break;
+      }
+
+      // 조회 이력 저장
+      await MarketResearchApi.saveHistory(token, {
+        'createAt': DateTime.now().toIso8601String(),
+        'marketInformation': jsonEncode(_marketSizeGrowth),
+        'competitorAnalysis': jsonEncode(_similarServices),
+        'marketTrends': jsonEncode(_trendCustomerTechnology),
+        'regulationInformation': '',
+        'marketEntryStrategy': '',
+        'businessId': _selectedBusiness!['id'],
+      });
+
+      setState(() {
+        _currentStep = 2;
+      });
+    } catch (e) {
+      setState(() {
+        _error = '시장 분석에 실패했습니다: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Widget _buildResults() {
-    // TODO: Implement results display
     return Card(
       child: Padding(
         padding: EdgeInsets.all(16.0),
-        child: Text('분석 결과가 여기에 표시됩니다.'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_marketSizeGrowth != null) ...[
+              Text('시장 규모 및 성장률', style: Theme.of(context).textTheme.titleLarge),
+              SizedBox(height: 8),
+              Text('시장 규모: ${_marketSizeGrowth!['marketSize']}'),
+              Text('성장률: ${_marketSizeGrowth!['growthRate']}'),
+              SizedBox(height: 16),
+            ],
+            if (_similarServices != null) ...[
+              Text('유사 서비스 분석', style: Theme.of(context).textTheme.titleLarge),
+              SizedBox(height: 8),
+              Text(_similarServices!['analysis']),
+              SizedBox(height: 16),
+            ],
+            if (_trendCustomerTechnology != null) ...[
+              Text('트렌드, 고객 분포, 기술 동향', style: Theme.of(context).textTheme.titleLarge),
+              SizedBox(height: 8),
+              Text('트렌드: ${_trendCustomerTechnology!['trend']}'),
+              Text('주요 고객: ${_trendCustomerTechnology!['mainCustomers']}'),
+              Text('기술 동향: ${_trendCustomerTechnology!['technologyTrend']}'),
+            ],
+          ],
+        ),
       ),
     );
   }
