@@ -6,6 +6,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'Api/MarketResearchAPI.dart';
 import 'Auth/TokenManager.dart';
 
+
 class MarketResearchPage extends StatefulWidget {
   @override
   _MarketResearchPageState createState() => _MarketResearchPageState();
@@ -62,12 +63,14 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
     }
   }
 
+
+
   Widget _buildStepIndicator() {
     return Column(
       children: [
         LinearProgressIndicator(
           value: (_currentStep + 1) / 3,
-          backgroundColor: Colors.grey[300],
+          backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
           valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
         ),
         SizedBox(height: 8),
@@ -88,13 +91,15 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
       "${step + 1}. $text",
       style: TextStyle(
         fontWeight: _currentStep >= step ? FontWeight.bold : FontWeight.normal,
-        color: _currentStep >= step ? Theme.of(context).colorScheme.primary : Colors.grey,
+        color: _currentStep >= step ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
       ),
     );
   }
 
   Widget _buildBusinessSelection() {
     return Card(
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surfaceVariant,
       child: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
@@ -102,7 +107,7 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
           children: [
             Row(
               children: [
-                Icon(FontAwesomeIcons.buildingUser, size: 20),
+                Icon(FontAwesomeIcons.buildingUser, size: 20, color: Theme.of(context).colorScheme.primary),
                 SizedBox(width: 8),
                 Text('사업 선택 또는 정보 입력', style: Theme.of(context).textTheme.titleLarge),
               ],
@@ -112,6 +117,8 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: '사업 선택',
+                filled: true,
+                fillColor: Theme.of(context).colorScheme.surface,
               ),
               value: _selectedBusiness,
               items: _businesses.map((business) {
@@ -137,6 +144,8 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: '사업 분야 (카테고리)',
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface,
                 ),
                 value: _customData['category'],
                 items: _categories.map((category) {
@@ -156,6 +165,8 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: '사업 규모',
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface,
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -168,6 +179,10 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
             ElevatedButton.icon(
               icon: Icon(Icons.arrow_forward),
               label: Text('다음'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              ),
               onPressed: (_selectedBusiness != null || _customData['category'] != null) ? () {
                 setState(() {
                   _currentStep = 1;
@@ -182,6 +197,8 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
 
   Widget _buildAnalysisTypeSelection() {
     return Card(
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surfaceVariant,
       child: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
@@ -189,7 +206,7 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
           children: [
             Row(
               children: [
-                Icon(FontAwesomeIcons.chartLine, size: 20),
+                Icon(FontAwesomeIcons.chartLine, size: 20, color: Theme.of(context).colorScheme.primary),
                 SizedBox(width: 8),
                 Text('분석 유형 선택', style: Theme.of(context).textTheme.titleLarge),
               ],
@@ -206,8 +223,8 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
                   icon: Icon(FontAwesomeIcons.list),
                   label: Text('전체 분석'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                    foregroundColor: Theme.of(context).colorScheme.onSecondary,
                   ),
                   onPressed: () => _analyzeMarket('all'),
                 ),
@@ -223,6 +240,10 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
     return ElevatedButton.icon(
       icon: Icon(icon),
       label: Text(label),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+      ),
       onPressed: () => _analyzeMarket(type),
     );
   }
@@ -290,6 +311,8 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
 
   Widget _buildResults() {
     return Card(
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surfaceVariant,
       child: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
@@ -317,14 +340,38 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
   }
 
   Widget _buildMarketSizeGrowthChart(Map<String, dynamic> data) {
-    // Implement chart using fl_chart
-    return Container(
-      height: 300,
-      child: LineChart(
-        LineChartData(
-          // Configure chart data here
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          height: 300,
+          child: LineChart(
+            LineChartData(
+              // 차트 구성 (기존 코드 유지)
+            ),
+          ),
         ),
-      ),
+        SizedBox(height: 16),
+        Text(
+          '시장 규모: ${data['marketSize'] ?? '데이터 없음'}',
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+        SizedBox(height: 8),
+        Text(
+          '성장률: ${data['growthRate'] ?? '데이터 없음'}',
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+        SizedBox(height: 16),
+        Text(
+          '상세 분석:',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        SizedBox(height: 8),
+        Text(
+          data['analysis'] ?? '상세 분석 데이터가 없습니다.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ],
     );
   }
 
@@ -332,7 +379,7 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(data['analysis'] ?? '분석 데이터가 없습니다.'),
+        Text(data['analysis'] ?? '분석 데이터가 없습니다.', style: Theme.of(context).textTheme.bodyMedium),
       ],
     );
   }
@@ -341,15 +388,22 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('트렌드: ${data['trend'] ?? ''}'),
-        Text('주요 고객: ${data['mainCustomers'] ?? ''}'),
-        Text('기술 동향: ${data['technologyTrend'] ?? ''}'),
+        Text('트렌드:', style: Theme.of(context).textTheme.titleMedium),
+        Text(data['trend'] ?? '데이터 없음', style: Theme.of(context).textTheme.bodyMedium),
+        SizedBox(height: 8),
+        Text('주요 고객:', style: Theme.of(context).textTheme.titleMedium),
+        Text(data['mainCustomers'] ?? '데이터 없음', style: Theme.of(context).textTheme.bodyMedium),
+        SizedBox(height: 8),
+        Text('기술 동향:', style: Theme.of(context).textTheme.titleMedium),
+        Text(data['technologyTrend'] ?? '데이터 없음', style: Theme.of(context).textTheme.bodyMedium),
       ],
     );
   }
 
   Widget _buildResearchHistory() {
     return Card(
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surfaceVariant,
       child: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
@@ -358,7 +412,7 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
             Text('조회 이력', style: Theme.of(context).textTheme.titleLarge),
             SizedBox(height: 16),
             if (_researchHistory.isEmpty)
-              Text('조회 이력이 없습니다.')
+              Text('조회 이력이 없습니다.', style: Theme.of(context).textTheme.bodyMedium)
             else
               ListView.builder(
                 shrinkWrap: true,
@@ -370,6 +424,7 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
                     subtitle: Text('${history['businessName'] ?? '사업명 없음'}'),
                     onTap: () {
                       // Implement history detail view
+                      _showHistoryDetail(history);
                     },
                   );
                 },
@@ -377,6 +432,41 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
           ],
         ),
       ),
+    );
+  }
+
+  void _showHistoryDetail(Map<String, dynamic> history) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('조회 이력 상세'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('날짜: ${history['createAt'] ?? '날짜 없음'}'),
+                Text('사업명: ${history['businessName'] ?? '사업명 없음'}'),
+                SizedBox(height: 16),
+                Text('시장 정보:', style: Theme.of(context).textTheme.titleMedium),
+                Text(history['marketInformation'] ?? '정보 없음'),
+                SizedBox(height: 8),
+                Text('경쟁사 분석:', style: Theme.of(context).textTheme.titleMedium),
+                Text(history['competitorAnalysis'] ?? '정보 없음'),
+                SizedBox(height: 8),
+                Text('시장 동향:', style: Theme.of(context).textTheme.titleMedium),
+                Text(history['marketTrends'] ?? '정보 없음'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: Text('닫기'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -399,9 +489,7 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
           actions: [
             TextButton(
               child: Text('닫기'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
             ),
           ],
         );
@@ -414,6 +502,8 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
     return Scaffold(
       appBar: AppBar(
         title: Text('시장 조사'),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         actions: [
           IconButton(
             icon: Icon(FontAwesomeIcons.circleQuestion),
@@ -424,18 +514,13 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : _error != null
-          ? Center(child: Text(_error!))
+          ? Center(child: Text(_error!, style: Theme.of(context).textTheme.bodyLarge))
           : SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('시장 조사💹', style: Theme.of(context).textTheme.headlineMedium),
-              ],
-            ),
+            Text('시장 조사💹', style: Theme.of(context).textTheme.headlineMedium),
             SizedBox(height: 16),
             _buildStepIndicator(),
             SizedBox(height: 16),
