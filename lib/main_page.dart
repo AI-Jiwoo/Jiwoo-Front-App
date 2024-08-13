@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'Business_Model.dart';
 import 'login_page.dart';
 import 'join_page.dart';
 import 'marketResearch_page.dart';
@@ -363,10 +364,9 @@ class _MarketResearchTabState extends State<MarketResearchTab> {
 class BusinessModelTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Center(child: Text('Business Model'));
+    return BusinessModelPage();
   }
 }
-
 class MyPageTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
