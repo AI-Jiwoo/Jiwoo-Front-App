@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'login_page.dart';
 import 'join_page.dart';
+import 'marketResearch_page.dart';
 import 'my_page.dart';
-import 'main_page.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(MyApp());
@@ -39,12 +42,13 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
 
-  static List<Widget> _widgetOptions = <Widget>[
+  final List<Widget> _pages = [
     HomeTab(),
-    MarketResearchTab(),
+    MarketResearchPage(),
     BusinessModelTab(),
-    MyPageTab(),
+    MyPage(),
   ];
+
 
   void _onItemTapped(int index) {
     setState(() {
@@ -59,7 +63,7 @@ class _MainPageState extends State<MainPage> {
         title: Text('Jiwoo AI Helper'),
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
-      body: _widgetOptions.elementAt(_selectedIndex),
+      body: _pages[_selectedIndex], // 선택된 인덱스에 해당하는 페이지를 표시
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: _onItemTapped,
@@ -85,7 +89,6 @@ class _MainPageState extends State<MainPage> {
     );
   }
 }
-
 class HomeTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -164,11 +167,196 @@ class FeatureCard extends StatelessWidget {
   }
 }
 
-// Placeholder widgets for other tabs
-class MarketResearchTab extends StatelessWidget {
+class MarketResearchTab extends StatefulWidget {
+  @override
+  _MarketResearchTabState createState() => _MarketResearchTabState();
+}
+
+class _MarketResearchTabState extends State<MarketResearchTab> {
+  int _currentStep = 0;
+  List<Map<String, dynamic>> _businesses = [];
+  Map<String, dynamic>? _selectedBusiness;
+  bool _isLoading = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBusinesses();
+  }
+
+  Future<void> _fetchBusinesses() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:5000/business/user'),
+        headers: {'Authorization': 'Bearer ${await _getToken()}'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _businesses = List<Map<String, dynamic>>.from(data['business'] ?? []);
+        });
+      } else {
+        throw Exception('Failed to load businesses');
+      }
+    } catch (e) {
+      setState(() {
+        _error = '사업 정보를 불러오는데 실패했습니다: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<String> _getToken() async {
+    // TODO: Implement token retrieval logic
+    return '';
+  }
+
+  Widget _buildBusinessSelection() {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('사업 선택', style: Theme.of(context).textTheme.titleLarge),
+            SizedBox(height: 16),
+            DropdownButtonFormField<Map<String, dynamic>>(
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: '사업 선택',
+              ),
+              value: _selectedBusiness,
+              items: _businesses.map((business) {
+                return DropdownMenuItem<Map<String, dynamic>>(
+                  value: business,
+                  child: Text(business['businessName'] ?? ''),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedBusiness = value;
+                });
+              },
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              child: Text('다음'),
+              onPressed: _selectedBusiness != null ? () {
+                setState(() {
+                  _currentStep = 1;
+                });
+              } : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnalysisTypeSelection() {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('분석 유형 선택', style: Theme.of(context).textTheme.titleLarge),
+            SizedBox(height: 16),
+            Wrap(
+              spacing: 8.0,
+              runSpacing: 8.0,
+              children: [
+                ElevatedButton(
+                  child: Text('시장 규모 분석'),
+                  onPressed: () => _analyzeMarket('marketSize'),
+                ),
+                ElevatedButton(
+                  child: Text('유사 서비스 분석'),
+                  onPressed: () => _analyzeMarket('similarServices'),
+                ),
+                ElevatedButton(
+                  child: Text('트렌드/고객/기술 분석'),
+                  onPressed: () => _analyzeMarket('trendCustomerTechnology'),
+                ),
+                ElevatedButton(
+                  child: Text('전체 분석'),
+                  onPressed: () => _analyzeMarket('all'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _analyzeMarket(String type) async {
+    // TODO: Implement market analysis logic
+    print('Analyzing market: $type');
+    // After analysis is complete:
+    setState(() {
+      _currentStep = 2;
+    });
+  }
+
+  Widget _buildResults() {
+    // TODO: Implement results display
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Text('분석 결과가 여기에 표시됩니다.'),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Center(child: Text('Market Research'));
+    return _isLoading
+        ? Center(child: CircularProgressIndicator())
+        : _error != null
+        ? Center(child: Text(_error!))
+        : SingleChildScrollView(
+      padding: EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          Stepper(
+            currentStep: _currentStep,
+            onStepTapped: (step) {
+              setState(() {
+                _currentStep = step;
+              });
+            },
+            steps: [
+              Step(
+                title: Text('사업 선택'),
+                content: _buildBusinessSelection(),
+                isActive: _currentStep >= 0,
+              ),
+              Step(
+                title: Text('분석 유형 선택'),
+                content: _buildAnalysisTypeSelection(),
+                isActive: _currentStep >= 1,
+              ),
+              Step(
+                title: Text('결과'),
+                content: _buildResults(),
+                isActive: _currentStep >= 2,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
