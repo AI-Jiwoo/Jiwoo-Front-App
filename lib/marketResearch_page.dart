@@ -6,7 +6,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'Api/MarketResearchAPI.dart';
 import 'Auth/TokenManager.dart';
 
-
 class MarketResearchPage extends StatefulWidget {
   @override
   _MarketResearchPageState createState() => _MarketResearchPageState();
@@ -62,8 +61,6 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
       });
     }
   }
-
-
 
   Widget _buildStepIndicator() {
     return Column(
@@ -386,17 +383,17 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
 
   Widget _buildTrendCustomerTechnologyAnalysis(Map<String, dynamic> data) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
         Text('트렌드:', style: Theme.of(context).textTheme.titleMedium),
-        Text(data['trend'] ?? '데이터 없음', style: Theme.of(context).textTheme.bodyMedium),
-        SizedBox(height: 8),
-        Text('주요 고객:', style: Theme.of(context).textTheme.titleMedium),
-        Text(data['mainCustomers'] ?? '데이터 없음', style: Theme.of(context).textTheme.bodyMedium),
-        SizedBox(height: 8),
-        Text('기술 동향:', style: Theme.of(context).textTheme.titleMedium),
-        Text(data['technologyTrend'] ?? '데이터 없음', style: Theme.of(context).textTheme.bodyMedium),
-      ],
+    Text(data['trend'] ?? '데이터 없음', style: Theme.of(context).textTheme.bodyMedium),
+    SizedBox(height: 8),
+          Text('주요 고객:', style: Theme.of(context).textTheme.titleMedium),
+          Text(data['mainCustomers'] ?? '데이터 없음', style: Theme.of(context).textTheme.bodyMedium),
+          SizedBox(height: 8),
+          Text('기술 동향:', style: Theme.of(context).textTheme.titleMedium),
+          Text(data['technologyTrend'] ?? '데이터 없음', style: Theme.of(context).textTheme.bodyMedium),
+        ],
     );
   }
 
@@ -416,6 +413,7 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
             else
               ListView.builder(
                 shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
                 itemCount: _researchHistory.length,
                 itemBuilder: (context, index) {
                   final history = _researchHistory[index];
@@ -423,7 +421,6 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
                     title: Text(history['createAt'] ?? '날짜 없음'),
                     subtitle: Text('${history['businessName'] ?? '사업명 없음'}'),
                     onTap: () {
-                      // Implement history detail view
                       _showHistoryDetail(history);
                     },
                   );
@@ -515,42 +512,47 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
           ? Center(child: CircularProgressIndicator())
           : _error != null
           ? Center(child: Text(_error!, style: Theme.of(context).textTheme.bodyLarge))
-          : SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 16),
-            _buildStepIndicator(),
-            SizedBox(height: 16),
-            TabBar(
+          : Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(16.0),
+            child: _buildStepIndicator(),
+          ),
+          TabBar(
+            controller: _tabController,
+            tabs: [
+              Tab(text: '시장 분석'),
+              Tab(text: '조회 이력'),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
               controller: _tabController,
-              tabs: [
-                Tab(text: '시장 분석'),
-                Tab(text: '조회 이력'),
+              children: [
+                // Market Analysis Tab
+                SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        if (_currentStep == 0) _buildBusinessSelection(),
+                        if (_currentStep == 1) _buildAnalysisTypeSelection(),
+                        if (_currentStep == 2) _buildResults(),
+                      ],
+                    ),
+                  ),
+                ),
+                // History Tab
+                SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: _buildResearchHistory(),
+                  ),
+                ),
               ],
             ),
-            SizedBox(height: 16),
-            SizedBox(
-              height: 600, // Adjust this height as needed
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  // Market Analysis Tab
-                  Column(
-                    children: [
-                      if (_currentStep == 0) _buildBusinessSelection(),
-                      if (_currentStep == 1) _buildAnalysisTypeSelection(),
-                      if (_currentStep == 2) _buildResults(),
-                    ],
-                  ),
-                  // History Tab
-                  _buildResearchHistory(),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
