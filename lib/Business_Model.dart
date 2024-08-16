@@ -41,7 +41,7 @@ class _BusinessModelPageState extends State<BusinessModelPage> {
       }
 
       final response = await http.get(
-        Uri.parse('http://localhost:5000/business/user'),
+        Uri.parse('http://13.124.128.228:5000/business/user'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -74,7 +74,7 @@ class _BusinessModelPageState extends State<BusinessModelPage> {
   Future<void> _fetchCategories() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:5000/category/names'),
+        Uri.parse('http://13.124.128.228:5000/category/names'),
         headers: {'Authorization': 'Bearer ${await _getToken()}'},
       );
       if (response.statusCode == 200) {
@@ -109,7 +109,7 @@ class _BusinessModelPageState extends State<BusinessModelPage> {
 
       final data = _selectedBusiness ?? _customData;
       final response = await http.post(
-        Uri.parse('http://localhost:5000/business-model/similar-services'),
+        Uri.parse('http://13.124.128.228:8001/business-model/similar-services'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json; charset=UTF-8',
@@ -150,7 +150,7 @@ class _BusinessModelPageState extends State<BusinessModelPage> {
       if (token == null) throw Exception('No token found');
 
       final response = await http.post(
-        Uri.parse('http://localhost:5000/business-model/analyze'),
+        Uri.parse('http://13.124.128.228:5000/business-model/analyze'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json; charset=UTF-8',
@@ -190,7 +190,7 @@ class _BusinessModelPageState extends State<BusinessModelPage> {
       if (token == null) throw Exception('No token found');
 
       final response = await http.post(
-        Uri.parse('http://localhost:5000/business-model/propose'),
+        Uri.parse('http://13.124.128.228:5000/business-model/propose'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json; charset=UTF-8',

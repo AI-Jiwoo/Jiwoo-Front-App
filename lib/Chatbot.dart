@@ -60,7 +60,7 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:8000/chat'),
+        Uri.parse('http://13.124.128.228:8001/chat'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $_token',
