@@ -10,7 +10,7 @@ class MarketResearchApi {
     }
 
     final response = await http.get(
-      Uri.parse('http://localhost:5000/business/user'),
+      Uri.parse('http://13.124.128.228:5000/business/user'),
       headers: {
         'Authorization': 'Bearer $token',
         'Accept-Charset': 'utf-8',
@@ -31,7 +31,7 @@ class MarketResearchApi {
 
   static Future<Map<String, dynamic>> analyzeMarketSize(String token, Map<String, dynamic> data) async {
     final response = await http.post(
-      Uri.parse('http://localhost:5000/market-research/market-size-growth'),
+      Uri.parse('http://13.124.128.228:5000/market-research/market-size-growth'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ class MarketResearchApi {
 
   static Future<Map<String, dynamic>> analyzeSimilarServices(String token, Map<String, dynamic> data) async {
     final response = await http.post(
-      Uri.parse('http://localhost:5000/market-research/similar-services-analysis'),
+      Uri.parse('http://13.124.128.228:8001/market-research/similar-services-analysis'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ class MarketResearchApi {
 
   static Future<Map<String, dynamic>> analyzeTrendCustomerTechnology(String token, Map<String, dynamic> data) async {
     final response = await http.post(
-      Uri.parse('http://localhost:5000/market-research/trend-customer-technology'),
+      Uri.parse('http://13.124.128.228:5000/market-research/trend-customer-technology'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -85,7 +85,7 @@ class MarketResearchApi {
 
   static Future<void> saveHistory(String token, Map<String, dynamic> historyData) async {
     final response = await http.post(
-      Uri.parse('http://localhost:5000/market-research/save-history'),
+      Uri.parse('http://13.124.128.228:5000/market-research/save-history'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',

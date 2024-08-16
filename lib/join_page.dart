@@ -50,7 +50,7 @@ class _JoinPageState extends State<JoinPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:5000/auth/exist/email'),
+        Uri.parse('http://13.124.128.228:5000/auth/exist/email'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': _email}),
       );
@@ -83,7 +83,7 @@ class _JoinPageState extends State<JoinPage> {
           : '';
 
       final response = await http.post(
-        Uri.parse('http://localhost:5000/auth/signup'),
+        Uri.parse('http://13.124.128.228:5000/auth/signup'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'name': _name,
