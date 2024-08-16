@@ -512,8 +512,9 @@ class _MyPageState extends State<MyPage> {
           Expanded(
             flex: 3,
             child: DropdownButtonFormField<String>(
-              value: userInfo['gender'],
+              value: userInfo['gender'] ?? '', // null 체크
               items: [
+                DropdownMenuItem(child: Text('선택하세요'), value: ''),
                 DropdownMenuItem(child: Text('남성'), value: 'MALE'),
                 DropdownMenuItem(child: Text('여성'), value: 'FEMALE'),
               ],
@@ -535,7 +536,6 @@ class _MyPageState extends State<MyPage> {
       ),
     );
   }
-
   Widget _buildBusinessInfoSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
