@@ -536,6 +536,7 @@ class _MyPageState extends State<MyPage> {
       ),
     );
   }
+
   Widget _buildBusinessInfoSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
