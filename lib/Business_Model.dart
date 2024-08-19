@@ -109,7 +109,7 @@ class _BusinessModelPageState extends State<BusinessModelPage> {
 
       final data = _selectedBusiness ?? _customData;
       final response = await http.post(
-        Uri.parse('http://13.124.128.228:8001/business-model/similar-services'),
+        Uri.parse('http://13.124.128.228:5000/business-model/similar-services'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json; charset=UTF-8',

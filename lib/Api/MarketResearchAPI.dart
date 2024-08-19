@@ -50,7 +50,7 @@ class MarketResearchApi {
 
   static Future<Map<String, dynamic>> analyzeSimilarServices(String token, Map<String, dynamic> data) async {
     final response = await http.post(
-      Uri.parse('http://13.124.128.228:8001/market-research/similar-services-analysis'),
+      Uri.parse('http://13.124.128.228:5000/market-research/similar-services-analysis'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
