@@ -60,7 +60,8 @@ class MarketResearchApi {
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body)['data'];
+      final decodedBody = utf8.decode(response.bodyBytes);
+      return jsonDecode(decodedBody)['data'];
     } else {
       throw Exception('Failed to analyze similar services');
     }
