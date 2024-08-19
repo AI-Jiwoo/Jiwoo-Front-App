@@ -508,6 +508,7 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
           ),
         ],
       ),
+
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : _error != null
