@@ -21,6 +21,7 @@ class _BusinessModelPageState extends State<BusinessModelPage> {
   List<String> _categories = [];
   Map<String, dynamic> _customData = {};
 
+
   @override
   void initState() {
     super.initState();
