@@ -14,7 +14,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  String _email = '';
+  final _emailController = TextEditingController();
   String _password = '';
   bool _rememberMe = false;
   bool _isLoading = false;
@@ -25,11 +25,18 @@ class _LoginPageState extends State<LoginPage> {
     _loadSavedEmail();
   }
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
   _loadSavedEmail() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    final savedEmail = prefs.getString('savedEmail') ?? '';
     setState(() {
-      _email = prefs.getString('savedEmail') ?? '';
-      _rememberMe = _email.isNotEmpty;
+      _emailController.text = savedEmail;
+      _rememberMe = savedEmail.isNotEmpty;
     });
   }
 
@@ -41,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
       if (_rememberMe) {
-        await prefs.setString('savedEmail', _email);
+        await prefs.setString('savedEmail', _emailController.text);
       } else {
         await prefs.remove('savedEmail');
       }
@@ -53,7 +60,7 @@ class _LoginPageState extends State<LoginPage> {
             'Content-Type': 'application/json; charset=UTF-8',
           },
           body: jsonEncode(<String, String>{
-            'email': _email,
+            'email': _emailController.text,
             'password': _password,
           }),
         ).timeout(Duration(seconds: 10));
@@ -115,7 +122,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   SizedBox(height: 48),
                   TextFormField(
-                    initialValue: _email,
+                    controller: _emailController,
                     decoration: InputDecoration(
                       labelText: 'EMAIL',
                       prefixIcon: Icon(Icons.email_outlined),
@@ -126,7 +133,6 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) => value!.isEmpty ? '이메일을 입력해주세요' : null,
-                    onChanged: (value) => setState(() => _email = value),
                   ),
                   SizedBox(height: 16),
                   TextFormField(
@@ -150,11 +156,6 @@ class _LoginPageState extends State<LoginPage> {
                         onChanged: (value) {
                           setState(() {
                             _rememberMe = value!;
-                            if (!_rememberMe) {
-                              SharedPreferences.getInstance().then((prefs) {
-                                prefs.remove('savedEmail');
-                              });
-                            }
                           });
                         },
                       ),
