@@ -74,17 +74,31 @@ class _BusinessModelPageState extends State<BusinessModelPage> {
 
   Future<void> _fetchCategories() async {
     try {
+      final token = await TokenManager.getToken();
+      if (token == null) {
+        throw Exception('No token found');
+      }
+
       final response = await http.get(
         Uri.parse('http://13.124.128.228:5000/category/names'),
-        headers: {'Authorization': 'Bearer ${await _getToken()}'},
+        headers: {'Authorization': 'Bearer $token'},
       );
+
       if (response.statusCode == 200) {
-        setState(() => _categories = List<String>.from(json.decode(response.body)));
+        // UTF-8로 디코딩
+        final decodedBody = utf8.decode(response.bodyBytes);
+        final List<dynamic> categoryList = json.decode(decodedBody);
+        setState(() => _categories = categoryList.cast<String>());
+      } else if (response.statusCode == 401) {
+        await TokenManager.removeToken();
+        Navigator.of(context).pushReplacementNamed('/login');
+        throw Exception('Authentication failed');
       } else {
-        throw Exception('Failed to load categories');
+        throw Exception('Failed to load categories: ${response.statusCode}');
       }
     } catch (e) {
-      setState(() => _error = 'Failed to load categories: $e');
+      setState(() => _error = '카테고리를 불러오는데 실패했습니다: $e');
+      print('Error fetching categories: $e');
     }
   }
 

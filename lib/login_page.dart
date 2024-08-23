@@ -39,6 +39,13 @@ class _LoginPageState extends State<LoginPage> {
         _isLoading = true;
       });
 
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      if (_rememberMe) {
+        await prefs.setString('savedEmail', _email);
+      } else {
+        await prefs.remove('savedEmail');
+      }
+
       try {
         final response = await http.post(
           Uri.parse('http://13.124.128.228:5000/login'),
@@ -57,15 +64,8 @@ class _LoginPageState extends State<LoginPage> {
             final jwt = token.substring(7);
             final decodedToken = Jwt.parseJwt(jwt);
 
-            SharedPreferences prefs = await SharedPreferences.getInstance();
             await prefs.setString('access-token', jwt);
             await prefs.setString('refresh-token', jwt);
-
-            if (_rememberMe) {
-              await prefs.setString('savedEmail', _email);
-            } else {
-              await prefs.remove('savedEmail');
-            }
 
             Navigator.of(context).pushReplacementNamed('/home');
           } else {
@@ -147,7 +147,16 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       Checkbox(
                         value: _rememberMe,
-                        onChanged: (value) => setState(() => _rememberMe = value!),
+                        onChanged: (value) {
+                          setState(() {
+                            _rememberMe = value!;
+                            if (!_rememberMe) {
+                              SharedPreferences.getInstance().then((prefs) {
+                                prefs.remove('savedEmail');
+                              });
+                            }
+                          });
+                        },
                       ),
                       Text('아이디 저장'),
                       Spacer(),
