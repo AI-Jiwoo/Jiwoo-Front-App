@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
-
 import 'Api/MarketResearchAPI.dart';
-import 'Auth/TokenManager.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class MarketResearchPage extends StatefulWidget {
   @override
@@ -23,12 +22,22 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
   List<Map<String, dynamic>> _researchHistory = [];
   TabController? _tabController;
   List<String> _categories = [];
-  Map<String, dynamic> _customData = {};
+  Map<String, dynamic> _customData = {
+    'category': '',
+    'businessScale': '',
+    'nation': '',
+    'customerType': '',
+    'businessType': '',
+    'businessContent': '',
+    'businessPlatform': '',
+    'investmentStatus': ''
+  };
 
   @override
   void initState() {
     super.initState();
     _fetchBusinesses();
+    _fetchCategories();
     _tabController = TabController(length: 2, vsync: this);
   }
 
@@ -48,12 +57,7 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
       _businesses = await MarketResearchApi.fetchBusinesses();
     } catch (e) {
       setState(() {
-        if (e.toString().contains('다시 로그인해주세요')) {
-          _error = '세션이 만료되었습니다. 다시 로그인해주세요.';
-          Navigator.of(context).pushReplacementNamed('/');
-        } else {
-          _error = '사업 정보를 불러오는데 실패했습니다: $e';
-        }
+        _error = '사업 정보를 불러오는데 실패했습니다: $e';
       });
     } finally {
       setState(() {
@@ -62,6 +66,14 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
     }
   }
 
+  Future<void> _fetchCategories() async {
+    try {
+      _categories = await MarketResearchApi.fetchCategories();
+    } catch (e) {
+      print('Error fetching categories: $e');
+      _error = '카테고리 목록을 불러오는데 실패했습니다: $e';
+    }
+  }
   Widget _buildStepIndicator() {
     return Column(
       children: [
@@ -118,60 +130,40 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
                 fillColor: Theme.of(context).colorScheme.surface,
               ),
               value: _selectedBusiness,
-              items: _businesses.map((business) {
-                return DropdownMenuItem<Map<String, dynamic>>(
-                  value: business,
-                  child: Text(business['businessName'] ?? ''),
-                );
-              }).toList(),
+              items: [
+                DropdownMenuItem<Map<String, dynamic>>(
+                  value: null,
+                  child: Text('선택안함'),
+                ),
+                ..._businesses.map((business) {
+                  return DropdownMenuItem<Map<String, dynamic>>(
+                    value: business,
+                    child: Text(business['businessName'] ?? ''),
+                  );
+                }).toList(),
+              ],
               onChanged: (value) {
                 setState(() {
                   _selectedBusiness = value;
                   if (value != null) {
                     _customData = Map.from(value);
                   } else {
-                    _customData = {};
+                    _customData = {
+                      'category': '',
+                      'businessScale': '',
+                      'nation': '',
+                      'customerType': '',
+                      'businessType': '',
+                      'businessContent': '',
+                      'businessPlatform': '',
+                      'investmentStatus': ''
+                    };
                   }
                 });
               },
             ),
-            if (_selectedBusiness == null) ...[
-              SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: '사업 분야 (카테고리)',
-                  filled: true,
-                  fillColor: Theme.of(context).colorScheme.surface,
-                ),
-                value: _customData['category'],
-                items: _categories.map((category) {
-                  return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _customData['category'] = value;
-                  });
-                },
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: '사업 규모',
-                  filled: true,
-                  fillColor: Theme.of(context).colorScheme.surface,
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    _customData['scale'] = value;
-                  });
-                },
-              ),
-            ],
+            SizedBox(height: 16),
+            _buildCustomDataForm(),
             SizedBox(height: 16),
             ElevatedButton.icon(
               icon: Icon(Icons.arrow_forward),
@@ -180,14 +172,70 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Theme.of(context).colorScheme.onPrimary,
               ),
-              onPressed: (_selectedBusiness != null || _customData['category'] != null) ? () {
+              onPressed: () {
                 setState(() {
                   _currentStep = 1;
                 });
-              } : null,
+              },
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCustomDataForm() {
+    return Column(
+      children: [
+        _buildDropdownField('사업 분야 (카테고리)', 'category', _categories),
+        _buildInputField('사업 규모', 'businessScale', '예: 중소기업'),
+        _buildInputField('국가', 'nation', '예: 대한민국'),
+        _buildInputField('고객유형', 'customerType', '예: B2B'),
+        _buildInputField('사업유형', 'businessType', '예: 소프트웨어 개발'),
+        _buildInputField('사업내용', 'businessContent', '사업 내용을 간략히 설명해주세요'),
+        _buildInputField('사업 플랫폼', 'businessPlatform', '예: 모바일 앱'),
+        _buildInputField('투자 상태', 'investmentStatus', '예: 시드 투자 유치'),
+      ],
+    );
+  }
+
+  Widget _buildDropdownField(String label, String field, List<String> items) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8.0),
+      child: DropdownButtonFormField<String>(
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(),
+        ),
+        value: _customData[field],
+        items: [
+          DropdownMenuItem<String>(child: Text('선택하세요'), value: ''),
+          ...items.map((item) => DropdownMenuItem<String>(child: Text(item), value: item)).toList(),
+        ],
+        onChanged: (value) {
+          setState(() {
+            _customData[field] = value;
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _buildInputField(String label, String field, String placeholder) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8.0),
+      child: TextFormField(
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: placeholder,
+          border: OutlineInputBorder(),
+        ),
+        initialValue: _customData[field],
+        onChanged: (value) {
+          setState(() {
+            _customData[field] = value;
+          });
+        },
       ),
     );
   }
@@ -246,129 +294,139 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
   }
 
   Future<void> _analyzeMarket(String type) async {
+    if (_selectedBusiness == null && _customData['category'].isEmpty) {
+      setState(() {
+        _error = '사업을 선택하거나 카테고리를 입력해주세요.';
+      });
+      return;
+    }
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
-    try {
-      final token = await TokenManager.getToken();
-      if (token == null) {
-        throw Exception('토큰이 없습니다. 다시 로그인해주세요.');
-      }
+try {
+final data = _selectedBusiness ?? _customData;
+Map<String, dynamic> analysisResult = {};
 
-      final data = _selectedBusiness ?? _customData;
-      switch (type) {
-        case 'marketSize':
-          _marketSizeGrowth = await MarketResearchApi.analyzeMarketSize(token, data);
-          break;
-        case 'similarServices':
-          _similarServices = await MarketResearchApi.analyzeSimilarServices(token, data);
-          break;
-        case 'trendCustomerTechnology':
-          _trendCustomerTechnology = await MarketResearchApi.analyzeTrendCustomerTechnology(token, data);
-          break;
-        case 'all':
-          final results = await Future.wait([
-            MarketResearchApi.analyzeMarketSize(token, data),
-            MarketResearchApi.analyzeSimilarServices(token, data),
-            MarketResearchApi.analyzeTrendCustomerTechnology(token, data),
-          ]);
-          _marketSizeGrowth = results[0];
-          _similarServices = results[1];
-          _trendCustomerTechnology = results[2];
-          break;
-      }
+if (type == 'all' || type == 'marketSize') {
+try {
+analysisResult = await MarketResearchApi.analyzeMarketSize(data);
+_marketSizeGrowth = analysisResult;
+} catch (error) {
+print('Market size analysis failed: $error');
+Fluttertoast.showToast(
+msg: "시장 규모 분석 중 오류가 발생했습니다.",
+toastLength: Toast.LENGTH_LONG,
+gravity: ToastGravity.BOTTOM,
+);
+}
+}
 
-      // Save research history
-      await MarketResearchApi.saveHistory(token, {
-        'createAt': DateTime.now().toIso8601String(),
-        'marketInformation': jsonEncode(_marketSizeGrowth),
-        'competitorAnalysis': jsonEncode(_similarServices),
-        'marketTrends': jsonEncode(_trendCustomerTechnology),
-        'businessId': _selectedBusiness?['id'] ?? -1,
-      });
+if (type == 'all' || type == 'similarServices') {
+try {
+analysisResult = await MarketResearchApi.analyzeSimilarServices(data);
+_similarServices = analysisResult;
+} catch (error) {
+print('Similar services analysis failed: $error');
+Fluttertoast.showToast(
+msg: "관련 유사서비스가 없습니다.",
+toastLength: Toast.LENGTH_LONG,
+gravity: ToastGravity.BOTTOM,
+);
+}
+}
 
-      setState(() {
-        _currentStep = 2;
-      });
-    } catch (e) {
-      setState(() {
-        _error = '시장 분석에 실패했습니다: $e';
-      });
-      if (e.toString().contains('다시 로그인해주세요')) {
-        Navigator.of(context).pushReplacementNamed('/');
-      }
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
+if (type == 'all' || type == 'trendCustomerTechnology') {
+try {
+analysisResult = await MarketResearchApi.analyzeTrendCustomerTechnology(data);
+_trendCustomerTechnology = analysisResult;
+} catch (error) {
+print('Trend analysis failed: $error');
+Fluttertoast.showToast(
+msg: "트렌드, 고객, 기술 분석 중 오류가 발생했습니다.",
+toastLength: Toast.LENGTH_LONG,
+gravity: ToastGravity.BOTTOM,
+);
+}
+}
+
+// businessId 처리 개선
+int businessId = _selectedBusiness != null ? _selectedBusiness!['id'] : 0;
+
+try {
+String saveResult = await MarketResearchApi.saveHistory({
+'createAt': DateTime.now().toIso8601String(),
+'marketInformation': jsonEncode(_marketSizeGrowth ?? {'businessId': businessId, 'marketSize': '정보 없음', 'growthRate': '정보 없음'}),
+'competitorAnalysis': jsonEncode(_similarServices ?? {}),
+'marketTrends': jsonEncode(_trendCustomerTechnology ?? {}),
+'businessId': businessId,
+});
+
+print('Save history result: $saveResult');
+} catch (saveError) {
+print('History save failed: $saveError');
+Fluttertoast.showToast(
+msg: "등록되지 않은 사업의 분석은 잠시동안만 저장됩니다.",
+toastLength: Toast.LENGTH_LONG,
+gravity: ToastGravity.BOTTOM,
+);
+}
+
+setState(() {
+_currentStep = 2;
+});
+} catch (e) {
+setState(() {
+_error = '시장 분석 중 일부 오류가 발생했습니다. 일부 결과만 표시될 수 있습니다.';
+});
+} finally {
+setState(() {
+_isLoading = false;
+});
+}
+}
+
 
   Widget _buildResults() {
-    return Card(
-      elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceVariant,
-      child: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (_marketSizeGrowth != null) ...[
-              Text('시장 규모 및 성장률', style: Theme.of(context).textTheme.titleLarge),
-              SizedBox(height: 8),
-              _buildMarketSizeGrowthChart(_marketSizeGrowth!),
-            ],
-            if (_similarServices != null) ...[
-              Text('유사 서비스 분석', style: Theme.of(context).textTheme.titleLarge),
-              SizedBox(height: 8),
-              _buildSimilarServicesAnalysis(_similarServices!),
-            ],
-            if (_trendCustomerTechnology != null) ...[
-              Text('트렌드, 고객 분포, 기술 동향', style: Theme.of(context).textTheme.titleLarge),
-              SizedBox(height: 8),
-              _buildTrendCustomerTechnologyAnalysis(_trendCustomerTechnology!),
-            ],
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_marketSizeGrowth != null) ...[
+          Text('시장 규모 및 성장률', style: Theme.of(context).textTheme.headlineSmall),
+          SizedBox(height: 8),
+          _buildMarketSizeGrowthChart(_marketSizeGrowth!),
+        ],
+        if (_similarServices != null) ...[
+          SizedBox(height: 16),
+          Text('유사 서비스 분석', style: Theme.of(context).textTheme.headlineSmall),
+          SizedBox(height: 8),
+          _buildSimilarServicesAnalysis(_similarServices!),
+        ],
+        if (_trendCustomerTechnology != null) ...[
+          SizedBox(height: 16),
+          Text('트렌드, 고객 분포, 기술 동향', style: Theme.of(context).textTheme.headlineSmall),
+          SizedBox(height: 8),
+          _buildTrendCustomerTechnologyAnalysis(_trendCustomerTechnology!),
+        ],
+        SizedBox(height: 16),
+        ElevatedButton(
+          child: Text('새로운 분석 시작'),
+          onPressed: _handleNewAnalysis,
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildMarketSizeGrowthChart(Map<String, dynamic> data) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          height: 300,
-          child: LineChart(
-            LineChartData(
-              // 차트 구성 (기존 코드 유지)
-            ),
-          ),
+    // Implement chart using fl_chart package
+    return Container(
+      height: 300,
+      child: LineChart(
+        LineChartData(
+          // Configure chart data here
         ),
-        SizedBox(height: 16),
-        Text(
-          '시장 규모: ${data['marketSize'] ?? '데이터 없음'}',
-          style: Theme.of(context).textTheme.bodyLarge,
-        ),
-        SizedBox(height: 8),
-        Text(
-          '성장률: ${data['growthRate'] ?? '데이터 없음'}',
-          style: Theme.of(context).textTheme.bodyLarge,
-        ),
-        SizedBox(height: 16),
-        Text(
-          '상세 분석:',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        SizedBox(height: 8),
-        Text(
-          data['analysis'] ?? '상세 분석 데이터가 없습니다.',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      ],
+      ),
     );
   }
 
@@ -376,59 +434,47 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(data['analysis'] ?? '분석 데이터가 없습니다.', style: Theme.of(context).textTheme.bodyMedium),
+        Text(data['analysis'] ?? '분석 데이터가 없습니다.'),
       ],
     );
   }
 
   Widget _buildTrendCustomerTechnologyAnalysis(Map<String, dynamic> data) {
     return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-        Text('트렌드:', style: Theme.of(context).textTheme.titleMedium),
-    Text(data['trend'] ?? '데이터 없음', style: Theme.of(context).textTheme.bodyMedium),
-    SizedBox(height: 8),
-          Text('주요 고객:', style: Theme.of(context).textTheme.titleMedium),
-          Text(data['mainCustomers'] ?? '데이터 없음', style: Theme.of(context).textTheme.bodyMedium),
-          SizedBox(height: 8),
-          Text('기술 동향:', style: Theme.of(context).textTheme.titleMedium),
-          Text(data['technologyTrend'] ?? '데이터 없음', style: Theme.of(context).textTheme.bodyMedium),
-        ],
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('트렌드: ${data['trend'] ?? '데이터 없음'}'),
+        SizedBox(height: 8),
+        Text('주요 고객: ${data['mainCustomers'] ?? '데이터 없음'}'),
+        SizedBox(height: 8),
+        Text('기술 동향: ${data['technologyTrend'] ?? '데이터 없음'}'),
+      ],
     );
   }
 
   Widget _buildResearchHistory() {
-    return Card(
-      elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceVariant,
-      child: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('조회 이력', style: Theme.of(context).textTheme.titleLarge),
-            SizedBox(height: 16),
-            if (_researchHistory.isEmpty)
-              Text('조회 이력이 없습니다.', style: Theme.of(context).textTheme.bodyMedium)
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: _researchHistory.length,
-                itemBuilder: (context, index) {
-                  final history = _researchHistory[index];
-                  return ListTile(
-                    title: Text(history['createAt'] ?? '날짜 없음'),
-                    subtitle: Text('${history['businessName'] ?? '사업명 없음'}'),
-                    onTap: () {
-                      _showHistoryDetail(history);
-                    },
-                  );
-                },
-              ),
-          ],
-        ),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('조회 이력', style: Theme.of(context).textTheme.headlineSmall),
+        SizedBox(height: 16),
+        if (_researchHistory.isEmpty)
+          Text('조회 이력이 없습니다.')
+        else
+          ListView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: _researchHistory.length,
+            itemBuilder: (context, index) {
+              final history = _researchHistory[index];
+              return ListTile(
+                title: Text(history['createAt'] ?? '날짜 없음'),
+                subtitle: Text(history['businessName'] ?? '사업명 없음'),
+                onTap: () => _showHistoryDetail(history),
+              );
+            },
+          ),
+      ],
     );
   }
 
@@ -494,67 +540,87 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('시장 조사💹'),
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        foregroundColor: Theme.of(context).colorScheme.onSurface,
-        actions: [
-          IconButton(
-            icon: Icon(FontAwesomeIcons.circleQuestion),
-            onPressed: _showHelpDialog,
-          ),
-        ],
-      ),
-
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : _error != null
-          ? Center(child: Text(_error!, style: Theme.of(context).textTheme.bodyLarge))
-          : Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.all(16.0),
-            child: _buildStepIndicator(),
-          ),
-          TabBar(
-            controller: _tabController,
-            tabs: [
-              Tab(text: '시장 분석'),
-              Tab(text: '조회 이력'),
-            ],
-          ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                // Market Analysis Tab
-                SingleChildScrollView(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        if (_currentStep == 0) _buildBusinessSelection(),
-                        if (_currentStep == 1) _buildAnalysisTypeSelection(),
-                        if (_currentStep == 2) _buildResults(),
-                      ],
-                    ),
-                  ),
-                ),
-                // History Tab
-                SingleChildScrollView(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: _buildResearchHistory(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+  void _handleNewAnalysis() {
+    setState(() {
+      _selectedBusiness = null;
+      _customData = {
+        'category': '',
+        'businessScale': '',
+        'nation': '',
+        'customerType': '',
+        'businessType': '',
+        'businessContent': '',
+        'businessPlatform': '',
+        'investmentStatus': ''
+      };
+      _marketSizeGrowth = null;
+      _similarServices = null;
+      _trendCustomerTechnology = null;
+      _error = null;
+      _currentStep = 0;
+    });
   }
+
+@override
+Widget build(BuildContext context) {
+return Scaffold(
+appBar: AppBar(
+title: Text('시장 조사💹'),
+backgroundColor: Theme.of(context).colorScheme.surface,
+foregroundColor: Theme.of(context).colorScheme.onSurface,
+actions: [
+IconButton(
+icon: Icon(FontAwesomeIcons.circleQuestion),
+onPressed: _showHelpDialog,
+),
+],
+),
+body: _isLoading
+? Center(child: CircularProgressIndicator())
+    : _error != null
+? Center(child: Text(_error!, style: Theme.of(context).textTheme.bodyLarge))
+    : Column(
+children: [
+Padding(
+padding: EdgeInsets.all(16.0),
+child: _buildStepIndicator(),
+),
+TabBar(
+controller: _tabController,
+tabs: [
+Tab(text: '시장 분석'),
+Tab(text: '조회 이력'),
+],
+),
+Expanded(
+child: TabBarView(
+controller: _tabController,
+children: [
+// Market Analysis Tab
+SingleChildScrollView(
+child: Padding(
+padding: EdgeInsets.all(16.0),
+child: Column(
+children: [
+if (_currentStep == 0) _buildBusinessSelection(),
+if (_currentStep == 1) _buildAnalysisTypeSelection(),
+if (_currentStep == 2) _buildResults(),
+],
+),
+),
+),
+// History Tab
+SingleChildScrollView(
+child: Padding(
+padding: EdgeInsets.all(16.0),
+child: _buildResearchHistory(),
+),
+),
+],
+),
+),
+],
+),
+);
+}
 }
