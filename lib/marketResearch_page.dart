@@ -122,7 +122,7 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
               ],
             ),
             SizedBox(height: 16),
-            DropdownButtonFormField<Map<String, dynamic>>(
+            DropdownButtonFormField<Map<String, dynamic>?>(
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: '사업 선택',
@@ -131,7 +131,7 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
               ),
               value: _selectedBusiness,
               items: [
-                DropdownMenuItem<Map<String, dynamic>>(
+                DropdownMenuItem<Map<String, dynamic>?>(
                   value: null,
                   child: Text('선택안함'),
                 ),
@@ -163,7 +163,7 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
               },
             ),
             SizedBox(height: 16),
-            _buildCustomDataForm(),
+            if (_selectedBusiness == null) _buildCustomDataForm(),
             SizedBox(height: 16),
             ElevatedButton.icon(
               icon: Icon(Icons.arrow_forward),
@@ -183,7 +183,6 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
       ),
     );
   }
-
   Widget _buildCustomDataForm() {
     return Column(
       children: [
