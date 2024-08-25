@@ -110,4 +110,28 @@ class MarketResearchApi {
     }
     return token;
   }
+
+  static Future<Map<String, dynamic>> fetchResearchHistory(int page, int size) async {
+    final token = await _getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/market-research/history?page=$page&size=$size'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept-Charset': 'utf-8',
+      },
+    );
+
+    print('Research history response status: ${response.statusCode}');
+    print('Research history response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      final data = json.decode(utf8.decode(response.bodyBytes));
+      return data;
+    } else if (response.statusCode == 401) {
+      await TokenManager.removeToken();
+      throw Exception('인증이 만료되었습니다. 다시 로그인해주세요.');
+    } else {
+      throw Exception('Failed to load research history: ${response.statusCode}');
+    }
+  }
 }

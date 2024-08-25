@@ -4,6 +4,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'Api/MarketResearchAPI.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
+
 
 class MarketResearchPage extends StatefulWidget {
   @override
@@ -33,19 +35,71 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
     'investmentStatus': ''
   };
 
+  // 새로 추가된 변수들
+  int _currentPage = 0;
+  int _totalPages = 0;
+  static const int _pageSize = 10;
+
   @override
   void initState() {
     super.initState();
     _fetchBusinesses();
     _fetchCategories();
+    _fetchResearchHistory(); // 초기 로드 시 이력 조회
     _tabController = TabController(length: 2, vsync: this);
+    _tabController!.addListener(_handleTabChange);
   }
 
   @override
   void dispose() {
+    _tabController?.removeListener(_handleTabChange);
     _tabController?.dispose();
     super.dispose();
   }
+
+  void _handleTabChange() {
+    if (_tabController!.index == 1) {
+      // 조회 이력 탭으로 변경될 때 이력 다시 불러오기
+      _fetchResearchHistory();
+    }
+  }
+
+
+  Future<void> _fetchResearchHistory() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final response = await MarketResearchApi.fetchResearchHistory(_currentPage, _pageSize);
+      print('Research history response: $response');
+
+      if (response['data'] != null && response['data'] is List) {
+        setState(() {
+          _researchHistory = List<Map<String, dynamic>>.from(response['data']);
+          _totalPages = response['totalPages'] ?? 1;
+        });
+      } else {
+        setState(() {
+          _researchHistory = [];
+          _totalPages = 0;
+        });
+      }
+    } catch (error) {
+      print('Failed to fetch research history: $error');
+      setState(() {
+        _error = '검색 이력을 불러오는데 실패했습니다: $error';
+        _researchHistory = [];
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+
 
   Future<void> _fetchBusinesses() async {
     setState(() {
@@ -220,6 +274,33 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
     );
   }
 
+  Future<void> _saveResearchHistory(Map<String, dynamic> data, String type) async {
+    try {
+      final historyData = {
+        'createAt': DateTime.now().toIso8601String(),
+        'businessName': data['businessName'] ?? '사용자 정의 분석',
+        'marketInformation': jsonEncode(_marketSizeGrowth ?? {}),
+        'competitorAnalysis': jsonEncode(_similarServices ?? {}),
+        'marketTrends': jsonEncode(_trendCustomerTechnology ?? {}),
+        'analysisType': type,
+      };
+
+      await MarketResearchApi.saveHistory(historyData);
+      Fluttertoast.showToast(
+        msg: "조회 이력이 저장되었습니다.",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+      );
+    } catch (saveError) {
+      print('History save failed: $saveError');
+      Fluttertoast.showToast(
+        msg: "조회 이력 저장에 실패했습니다.",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+      );
+    }
+  }
+
   Widget _buildInputField(String label, String field, String placeholder) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8.0),
@@ -304,87 +385,93 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
       _error = null;
     });
 
-try {
-final data = _selectedBusiness ?? _customData;
-Map<String, dynamic> analysisResult = {};
+    try {
+      final data = _selectedBusiness ?? _customData;
+      Map<String, dynamic> analysisResult = {};
 
-if (type == 'all' || type == 'marketSize') {
-try {
-analysisResult = await MarketResearchApi.analyzeMarketSize(data);
-_marketSizeGrowth = analysisResult;
-} catch (error) {
-print('Market size analysis failed: $error');
-Fluttertoast.showToast(
-msg: "시장 규모 분석 중 오류가 발생했습니다.",
-toastLength: Toast.LENGTH_LONG,
-gravity: ToastGravity.BOTTOM,
-);
-}
-}
+      if (type == 'all' || type == 'marketSize') {
+        try {
+          analysisResult = await MarketResearchApi.analyzeMarketSize(data);
+          _marketSizeGrowth = analysisResult;
+        } catch (error) {
+          print('Market size analysis failed: $error');
+          Fluttertoast.showToast(
+            msg: "시장 규모 분석 중 오류가 발생했습니다.",
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.BOTTOM,
+          );
+        }
+      }
 
-if (type == 'all' || type == 'similarServices') {
-try {
-analysisResult = await MarketResearchApi.analyzeSimilarServices(data);
-_similarServices = analysisResult;
-} catch (error) {
-print('Similar services analysis failed: $error');
-Fluttertoast.showToast(
-msg: "관련 유사서비스가 없습니다.",
-toastLength: Toast.LENGTH_LONG,
-gravity: ToastGravity.BOTTOM,
-);
-}
-}
+      if (type == 'all' || type == 'similarServices') {
+        try {
+          analysisResult = await MarketResearchApi.analyzeSimilarServices(data);
+          _similarServices = analysisResult;
+        } catch (error) {
+          print('Similar services analysis failed: $error');
+          Fluttertoast.showToast(
+            msg: "관련 유사서비스가 없습니다.",
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.BOTTOM,
+          );
+        }
+      }
 
-if (type == 'all' || type == 'trendCustomerTechnology') {
-try {
-analysisResult = await MarketResearchApi.analyzeTrendCustomerTechnology(data);
-_trendCustomerTechnology = analysisResult;
-} catch (error) {
-print('Trend analysis failed: $error');
-Fluttertoast.showToast(
-msg: "트렌드, 고객, 기술 분석 중 오류가 발생했습니다.",
-toastLength: Toast.LENGTH_LONG,
-gravity: ToastGravity.BOTTOM,
-);
-}
-}
+      if (type == 'all' || type == 'trendCustomerTechnology') {
+        try {
+          analysisResult = await MarketResearchApi.analyzeTrendCustomerTechnology(data);
+          _trendCustomerTechnology = analysisResult;
+        } catch (error) {
+          print('Trend analysis failed: $error');
+          Fluttertoast.showToast(
+            msg: "트렌드, 고객, 기술 분석 중 오류가 발생했습니다.",
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.BOTTOM,
+          );
+        }
+      }
 
-// businessId 처리 개선
-int businessId = _selectedBusiness != null ? _selectedBusiness!['id'] : 0;
+      // 이력 저장
+      final historyData = {
+        'createAt': DateTime.now().toIso8601String(),
+        'marketInformation': jsonEncode(_marketSizeGrowth ?? {}),
+        'competitorAnalysis': jsonEncode(_similarServices ?? {}),
+        'marketTrends': jsonEncode(_trendCustomerTechnology ?? {}),
+        'businessId': _selectedBusiness != null ? _selectedBusiness!['id'] : null,  // 여기를 수정
+        'analysisType': type,
+        'businessName': _selectedBusiness != null ? _selectedBusiness!['businessName'] : (_customData['category'] ?? '사용자 정의 분석'),
+      };
 
-try {
-String saveResult = await MarketResearchApi.saveHistory({
-'createAt': DateTime.now().toIso8601String(),
-'marketInformation': jsonEncode(_marketSizeGrowth ?? {'businessId': businessId, 'marketSize': '정보 없음', 'growthRate': '정보 없음'}),
-'competitorAnalysis': jsonEncode(_similarServices ?? {}),
-'marketTrends': jsonEncode(_trendCustomerTechnology ?? {}),
-'businessId': businessId,
-});
+      try {
+        await MarketResearchApi.saveHistory(historyData);
+        print('이력 저장 성공');
 
-print('Save history result: $saveResult');
-} catch (saveError) {
-print('History save failed: $saveError');
-Fluttertoast.showToast(
-msg: "등록되지 않은 사업의 분석은 잠시동안만 저장됩니다.",
-toastLength: Toast.LENGTH_LONG,
-gravity: ToastGravity.BOTTOM,
-);
-}
+        // 로컬 상태 업데이트
+        setState(() {
+          _researchHistory = [historyData, ..._researchHistory];
+        });
+      } catch (saveError) {
+        print('History save failed: $saveError');
+        Fluttertoast.showToast(
+          msg: "등록되지 않은 사업의 분석은 잠시동안만 저장됩니다.",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+        );
+      }
 
-setState(() {
-_currentStep = 2;
-});
-} catch (e) {
-setState(() {
-_error = '시장 분석 중 일부 오류가 발생했습니다. 일부 결과만 표시될 수 있습니다.';
-});
-} finally {
-setState(() {
-_isLoading = false;
-});
-}
-}
+      setState(() {
+        _currentStep = 2;
+      });
+    } catch (e) {
+      setState(() {
+        _error = '시장 분석 중 일부 오류가 발생했습니다. 일부 결과만 표시될 수 있습니다.';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
 
   Widget _buildResults() {
@@ -457,25 +544,91 @@ _isLoading = false;
       children: [
         Text('조회 이력', style: Theme.of(context).textTheme.headlineSmall),
         SizedBox(height: 16),
-        if (_researchHistory.isEmpty)
-          Text('조회 이력이 없습니다.')
-        else
-          ListView.builder(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            itemCount: _researchHistory.length,
-            itemBuilder: (context, index) {
-              final history = _researchHistory[index];
-              return ListTile(
-                title: Text(history['createAt'] ?? '날짜 없음'),
-                subtitle: Text(history['businessName'] ?? '사업명 없음'),
-                onTap: () => _showHistoryDetail(history),
-              );
-            },
+        if (_isLoading)
+          CircularProgressIndicator()
+        else if (_error != null)
+          Text(_error!, style: TextStyle(color: Colors.red))
+        else if (_researchHistory.isEmpty)
+            Text('조회 이력이 없습니다.')
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: _researchHistory.length,
+              itemBuilder: (context, index) {
+                final history = _researchHistory[index];
+                return ListTile(
+                  title: Text(_getBusinessName(history)),
+                  subtitle: Text('분석 일시: ${_formatDate(history['createAt'])}'),
+                  trailing: Text(_getAnalysisType(history['analysisType'])),
+                  onTap: () => _showHistoryDetail(history),
+                );
+              },
+            ),
+        if (_totalPages > 1)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: _currentPage > 0 ? () {
+                  setState(() {
+                    _currentPage--;
+                    _fetchResearchHistory();
+                  });
+                } : null,
+                child: Text('이전'),
+              ),
+              SizedBox(width: 16),
+              Text('${_currentPage + 1} / $_totalPages'),
+              SizedBox(width: 16),
+              ElevatedButton(
+                onPressed: _currentPage < _totalPages - 1 ? () {
+                  setState(() {
+                    _currentPage++;
+                    _fetchResearchHistory();
+                  });
+                } : null,
+                child: Text('다음'),
+              ),
+            ],
           ),
       ],
     );
   }
+
+
+  String _formatDate(String? dateString) {
+    if (dateString == null) return '날짜 없음';
+    try {
+      final date = DateTime.parse(dateString).toLocal();
+      final formatter = DateFormat('yyyy-MM-dd HH:mm', 'ko_KR');
+      return formatter.format(date);
+    } catch (e) {
+      return dateString;
+    }
+  }
+
+  String _getBusinessName(Map<String, dynamic> history) {
+    return history['businessName'] ??
+        history['businessData']?['businessName'] ??
+        '사업명 없음';
+  }
+
+  String _getAnalysisType(String? type) {
+    switch (type) {
+      case 'marketSize':
+        return '시장 규모';
+      case 'similarServices':
+        return '유사 서비스';
+      case 'trendCustomerTechnology':
+        return '트렌드/고객/기술';
+      case 'all':
+        return '전체 분석';
+      default:
+        return '분석 유형 없음';
+    }
+  }
+
 
   void _showHistoryDetail(Map<String, dynamic> history) {
     showDialog(
@@ -487,17 +640,17 @@ _isLoading = false;
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('날짜: ${history['createAt'] ?? '날짜 없음'}'),
-                Text('사업명: ${history['businessName'] ?? '사업명 없음'}'),
+                Text('날짜: ${_formatDate(history['createAt'])}'),
+                Text('사업명: ${_getBusinessName(history)}'),
                 SizedBox(height: 16),
                 Text('시장 정보:', style: Theme.of(context).textTheme.titleMedium),
-                Text(history['marketInformation'] ?? '정보 없음'),
+                _buildFormattedView(history['marketInformation']),
                 SizedBox(height: 8),
                 Text('경쟁사 분석:', style: Theme.of(context).textTheme.titleMedium),
-                Text(history['competitorAnalysis'] ?? '정보 없음'),
+                _buildFormattedView(history['competitorAnalysis']),
                 SizedBox(height: 8),
                 Text('시장 동향:', style: Theme.of(context).textTheme.titleMedium),
-                Text(history['marketTrends'] ?? '정보 없음'),
+                _buildFormattedView(history['marketTrends']),
               ],
             ),
           ),
@@ -510,6 +663,52 @@ _isLoading = false;
         );
       },
     );
+  }
+
+  Widget _buildFormattedView(String? jsonString) {
+    if (jsonString == null || jsonString.isEmpty) {
+      return Text('정보 없음');
+    }
+    try {
+      final jsonData = json.decode(jsonString);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: _buildFormattedList(jsonData),
+      );
+    } catch (e) {
+      return Text(jsonString);
+    }
+  }
+
+  List<Widget> _buildFormattedList(dynamic data, {String indent = ''}) {
+    List<Widget> widgets = [];
+    if (data is Map) {
+      data.forEach((key, value) {
+        widgets.add(Text('$indent$key:'));
+        widgets.addAll(_buildFormattedList(value, indent: indent + '  '));
+      });
+    } else if (data is List) {
+      for (var i = 0; i < data.length; i++) {
+        widgets.add(Text('$indent- ${data[i]}'));
+      }
+    } else {
+      widgets.add(Text('$indent$data'));
+    }
+    return widgets;
+  }
+
+
+
+  Widget _buildJsonView(String? jsonString) {
+    if (jsonString == null || jsonString.isEmpty) {
+      return Text('정보 없음');
+    }
+    try {
+      final jsonData = json.decode(jsonString);
+      return Text(JsonEncoder.withIndent('  ').convert(jsonData));
+    } catch (e) {
+      return Text(jsonString);
+    }
   }
 
   void _showHelpDialog() {
