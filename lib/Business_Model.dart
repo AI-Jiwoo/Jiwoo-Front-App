@@ -19,7 +19,17 @@ class _BusinessModelPageState extends State<BusinessModelPage> {
   bool _isLoading = false;
   String? _error;
   List<String> _categories = [];
-  Map<String, dynamic> _customData = {};
+
+  Map<String, dynamic> _customData = {
+    'category': '',
+    'businessScale': '',
+    'businessType': '',
+    'customerType': '',
+    'nation': '',
+    'businessContent': '',
+    'businessPlatform': '',
+    'investmentStatus': '',
+  };
 
 
   @override
@@ -108,7 +118,7 @@ class _BusinessModelPageState extends State<BusinessModelPage> {
   }
 
   Future<void> _getSimilarServices() async {
-    if (_selectedBusiness == null && _customData['category'] == null) {
+    if (_selectedBusiness == null && _customData['category'].isEmpty) {
       setState(() => _error = '사업을 선택하거나 카테고리를 입력해주세요.');
       return;
     }
@@ -133,7 +143,6 @@ class _BusinessModelPageState extends State<BusinessModelPage> {
       );
 
       if (response.statusCode == 200) {
-        // UTF-8로 디코딩
         final decodedBody = utf8.decode(response.bodyBytes);
         setState(() {
           _similarServices = List<Map<String, dynamic>>.from(json.decode(decodedBody));
@@ -277,51 +286,36 @@ class _BusinessModelPageState extends State<BusinessModelPage> {
                 labelText: '사업 선택',
               ),
               value: _selectedBusiness?['id'],
-              items: _businesses.map((business) {
-                return DropdownMenuItem<int>(
-                  value: business['id'],
-                  child: Text(business['businessName'] ?? ''),
-                );
-              }).toList(),
+              items: [
+                DropdownMenuItem<int>(
+                  value: null,
+                  child: Text('직접 입력'),
+                ),
+                ..._businesses.map((business) {
+                  return DropdownMenuItem<int>(
+                    value: business['id'],
+                    child: Text(business['businessName'] ?? ''),
+                  );
+                }).toList(),
+              ],
               onChanged: (value) {
                 setState(() {
-                  _selectedBusiness = _businesses.firstWhere((b) => b['id'] == value);
+                  _selectedBusiness = value != null
+                      ? _businesses.firstWhere((b) => b['id'] == value)
+                      : null;
                 });
               },
             ),
             if (_selectedBusiness == null) ...[
               SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: '사업 분야 (카테고리)',
-                ),
-                value: _customData['category'],
-                items: _categories.map((category) {
-                  return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _customData['category'] = value;
-                  });
-                },
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: '사업 규모',
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    _customData['scale'] = value;
-                  });
-                },
-              ),
-              // Add more TextFormFields for other custom data fields
+              _buildDropdownField('사업 분야 (카테고리)', 'category', _categories),
+              _buildInputField('사업 규모', 'businessScale', '예: 중소기업'),
+              _buildInputField('사업 유형', 'businessType', '예: 소프트웨어 개발'),
+              _buildInputField('고객 유형', 'customerType', '예: B2B'),
+              _buildInputField('국가', 'nation', '예: 대한민국'),
+              _buildInputField('사업 내용', 'businessContent', '사업 내용을 간략히 설명해주세요'),
+              _buildInputField('사업 플랫폼', 'businessPlatform', '예: 모바일 앱'),
+              _buildInputField('투자 상태', 'investmentStatus', '예: 시드 투자 유치'),
             ],
             SizedBox(height: 16),
             ElevatedButton(
@@ -330,6 +324,46 @@ class _BusinessModelPageState extends State<BusinessModelPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInputField(String label, String field, String placeholder) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8.0),
+      child: TextFormField(
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: placeholder,
+          border: OutlineInputBorder(),
+        ),
+        onChanged: (value) {
+          setState(() {
+            _customData[field] = value;
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _buildDropdownField(String label, String field, List<String> items) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8.0),
+      child: DropdownButtonFormField<String>(
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(),
+        ),
+        value: _customData[field],
+        items: [
+          DropdownMenuItem<String>(child: Text('선택하세요'), value: ''),
+          ...items.map((item) => DropdownMenuItem<String>(child: Text(item), value: item)).toList(),
+        ],
+        onChanged: (value) {
+          setState(() {
+            _customData[field] = value;
+          });
+        },
       ),
     );
   }
