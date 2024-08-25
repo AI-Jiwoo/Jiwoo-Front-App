@@ -609,9 +609,37 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
   }
 
   String _getBusinessName(Map<String, dynamic> history) {
-    return history['businessName'] ??
-        history['businessData']?['businessName'] ??
-        '사업명 없음';
+    print('History data: $history');
+
+    // 분석 유형을 기본값으로 설정
+    String analysisType = history['analysisType'] ?? '알 수 없는';
+
+    // marketInformation에서 카테고리 정보 찾기
+    if (history['marketInformation'] != null) {
+      try {
+        Map<String, dynamic> marketInfo = json.decode(history['marketInformation']);
+        if (marketInfo['category'] != null && marketInfo['category'].isNotEmpty) {
+          return '${marketInfo['category']} - $analysisType 분석';
+        }
+      } catch (e) {
+        print('Error decoding marketInformation: $e');
+      }
+    }
+
+    // competitorAnalysis에서 유사 서비스 정보 찾기
+    if (history['competitorAnalysis'] != null) {
+      try {
+        Map<String, dynamic> competitorInfo = json.decode(history['competitorAnalysis']);
+        if (competitorInfo['similarServices'] != null && competitorInfo['similarServices'].isNotEmpty) {
+          return '${competitorInfo['similarServices'][0].split(' ')[0]} 관련 - $analysisType 분석';
+        }
+      } catch (e) {
+        print('Error decoding competitorAnalysis: $e');
+      }
+    }
+
+    // 기본 반환값
+    return '$analysisType 분석';
   }
 
   String _getAnalysisType(String? type) {
@@ -680,12 +708,15 @@ class _MarketResearchPageState extends State<MarketResearchPage> with SingleTick
     }
   }
 
+
   List<Widget> _buildFormattedList(dynamic data, {String indent = ''}) {
     List<Widget> widgets = [];
     if (data is Map) {
       data.forEach((key, value) {
-        widgets.add(Text('$indent$key:'));
-        widgets.addAll(_buildFormattedList(value, indent: indent + '  '));
+        if (key != 'businessId') {  // 비즈니스 ID 제외
+          widgets.add(Text('$indent$key:', style: TextStyle(fontWeight: FontWeight.bold)));
+          widgets.addAll(_buildFormattedList(value, indent: indent + '  '));
+        }
       });
     } else if (data is List) {
       for (var i = 0; i < data.length; i++) {
