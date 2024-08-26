@@ -36,6 +36,13 @@ class _MyPageState extends State<MyPage> {
     fetchCategories();
   }
 
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('access-token');
+    await prefs.remove('refresh-token');
+    Navigator.of(context).pushReplacementNamed('/'); // 로그인 페이지로 이동
+  }
+
   Future<void> fetchUserInfo() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('access-token') ?? '';
@@ -342,6 +349,18 @@ class _MyPageState extends State<MyPage> {
               _buildUserInfoSection(),
               SizedBox(height: 24),
               _buildBusinessInfoSection(),
+              SizedBox(height: 24),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _logout,
+                  child: Text('로그아웃'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                    foregroundColor: Theme.of(context).colorScheme.onError,
+                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -512,14 +531,17 @@ class _MyPageState extends State<MyPage> {
           Expanded(
             flex: 3,
             child: DropdownButtonFormField<String>(
-              value: userInfo['gender'] ?? '', // null 체크
+              value: userInfo['gender'] ?? '',
               items: [
                 DropdownMenuItem(child: Text('선택하세요'), value: ''),
                 DropdownMenuItem(child: Text('남성'), value: 'MALE'),
                 DropdownMenuItem(child: Text('여성'), value: 'FEMALE'),
               ],
               onChanged: (value) {
-                setState(() => userInfo['gender'] = value);
+                setState(() {
+                  userInfo['gender'] = value;
+                  print('Selected gender: $value'); // 디버깅용 로그
+                });
               },
               decoration: InputDecoration(
                 filled: true,
