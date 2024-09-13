@@ -6,7 +6,7 @@ import 'TokenManager.dart';
 class AuthService {
   static Future<bool> login(String email, String password) async {
     final response = await http.post(
-      Uri.parse('http://13.124.128.228:5000/auth/login'),
+      Uri.parse('http://localhost:5000/auth/login'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'email': email, 'password': password}),
     );

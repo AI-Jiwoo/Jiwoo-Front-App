@@ -49,7 +49,7 @@ class _MyPageState extends State<MyPage> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://13.124.128.228:5000/auth/profile'),
+        Uri.parse('http://localhost:5000/auth/profile'),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept-Charset': 'utf-8',
@@ -87,7 +87,7 @@ class _MyPageState extends State<MyPage> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://13.124.128.228:5000/business/user'),
+        Uri.parse('http://localhost:5000/business/user'),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept-Charset': 'utf-8',
@@ -113,7 +113,7 @@ class _MyPageState extends State<MyPage> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://13.124.128.228:5000/category/names'),
+        Uri.parse('http://localhost:5000/category/names'),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept-Charset': 'utf-8',
@@ -150,7 +150,7 @@ class _MyPageState extends State<MyPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://13.124.128.228:5000/auth/edit/info'),
+        Uri.parse('http://localhost:5000/auth/edit/info'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json; charset=UTF-8',
@@ -196,7 +196,7 @@ class _MyPageState extends State<MyPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://13.124.128.228:5000/auth/edit/password'),
+        Uri.parse('http://localhost:5000/auth/edit/password'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json; charset=UTF-8',
@@ -293,7 +293,7 @@ class _MyPageState extends State<MyPage> {
       print('Submitting business info: $newBusinessInfo'); // 디버깅용 로그
 
       final response = await http.post(
-        Uri.parse('http://13.124.128.228:5000/business/regist'),
+        Uri.parse('http://localhost:5000/business/regist'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json; charset=UTF-8',

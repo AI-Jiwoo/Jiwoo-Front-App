@@ -55,7 +55,7 @@ class _LoginPageState extends State<LoginPage> {
 
       try {
         final response = await http.post(
-          Uri.parse('http://13.124.128.228:5000/login'),
+          Uri.parse('http://localhost:5000/login'),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },

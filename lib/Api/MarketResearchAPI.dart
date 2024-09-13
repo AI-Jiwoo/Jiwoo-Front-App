@@ -3,7 +3,7 @@ import 'dart:convert';
 import '../Auth/TokenManager.dart';
 
 class MarketResearchApi {
-  static const String baseUrl = 'http://13.124.128.228:5000';
+  static const String baseUrl = 'http://localhost:5000';
 
   static Future<List<Map<String, dynamic>>> fetchBusinesses() async {
     final token = await _getToken();

@@ -47,7 +47,7 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
   Future<void> _loadResearchHistory() async {
     try {
       final response = await http.get(
-        Uri.parse('http://13.124.128.228:8001/market-research/history'),
+        Uri.parse('http://localhost:8001/market-research/history'),
         headers: {
           'Authorization': 'Bearer $_token',
         },
@@ -87,7 +87,7 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://13.124.128.228:8001/chat'),
+        Uri.parse('http://loaclhost:8001/chat'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $_token',
