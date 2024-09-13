@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:jiwoo_front_app/terms_and_privacy.dart';
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
 class JoinPage extends StatefulWidget {
@@ -21,11 +21,28 @@ class _JoinPageState extends State<JoinPage> {
   bool _isEmailVerified = false;
   bool _isLoading = false;
 
+  Widget buildTermsContainer(BuildContext context, String content) {
+    return Container(
+      height: 200,
+      decoration: BoxDecoration(
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(8),
+        child: Text(
+          content,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ),
+    );
+  }
+
+
+
   Future<void> _checkEmail() async {
     if (_email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('이메일을 입력해주세요.')),
-      );
+      _showSnackBar('이메일을 입력해주세요.');
       return;
     }
 
@@ -40,18 +57,12 @@ class _JoinPageState extends State<JoinPage> {
 
       if (response.statusCode == 200) {
         setState(() => _isEmailVerified = true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('사용 가능한 이메일입니다.')),
-        );
+        _showSnackBar('사용 가능한 이메일입니다.');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('중복된 이메일입니다. 다른 이메일을 사용해주세요.')),
-        );
+        _showSnackBar('중복된 이메일입니다. 다른 이메일을 사용해주세요.');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('이메일 확인 중 오류가 발생했습니다.')),
-      );
+      _showSnackBar('이메일 확인 중 오류가 발생했습니다.');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -60,9 +71,7 @@ class _JoinPageState extends State<JoinPage> {
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
     if (!_isEmailVerified) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('이메일 중복 확인을 해주세요.')),
-      );
+      _showSnackBar('이메일 중복 확인을 해주세요.');
       return;
     }
 
@@ -85,169 +94,275 @@ class _JoinPageState extends State<JoinPage> {
       );
 
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('회원가입이 완료되었습니다.')),
-        );
-        setState(() => _currentStep = 2); // 가입완료 단계로 이동
+        _showSnackBar('회원가입이 완료되었습니다.');
+        setState(() => _currentStep = 2);
       } else {
         throw Exception('회원가입 실패: ${response.body}');
       }
     } catch (e) {
-      print('Signup error: $e'); // 콘솔에 에러 출력
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('회원가입 중 오류가 발생했습니다: $e')),
-      );
+      print('Signup error: $e');
+      _showSnackBar('회원가입 중 오류가 발생했습니다: $e');
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-  Widget _buildTermsStep() {
-    return Column(
-      children: [
-        CheckboxListTile(
-          title: Text('홈페이지 이용약관 동의 (필수)'),
-          value: _termsAgreed,
-          onChanged: (value) => setState(() => _termsAgreed = value!),
-        ),
-        Container(
-          height: 100,
-          child: SingleChildScrollView(
-            child: Text('이용약관 내용...'), // 실제 약관 내용으로 대체
-          ),
-        ),
-        CheckboxListTile(
-          title: Text('개인정보 이용약관 동의 (필수)'),
-          value: _privacyAgreed,
-          onChanged: (value) => setState(() => _privacyAgreed = value!),
-        ),
-        Container(
-          height: 100,
-          child: SingleChildScrollView(
-            child: Text('개인정보 약관 내용...'), // 실제 약관 내용으로 대체
-          ),
-        ),
-        ElevatedButton(
-          child: Text('다음단계'),
-          onPressed: (_termsAgreed && _privacyAgreed) ? () => setState(() => _currentStep = 1) : null,
-        ),
-      ],
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Widget _buildButton({required String text, required VoidCallback? onPressed}) {
+    return FilledButton(
+      onPressed: onPressed,
+      child: Text(text),
+      style: FilledButton.styleFrom(
+        minimumSize: Size(double.infinity, 50),
+      ),
     );
   }
 
+  Widget _buildTermsStep() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('이용약관', style: Theme.of(context).textTheme.headlineSmall),
+            SizedBox(height: 16),
+            _buildCheckboxTile(
+              title: '홈페이지 이용약관 동의 (필수)',
+              value: _termsAgreed,
+              onChanged: (value) => setState(() => _termsAgreed = value!),
+            ),
+            // 이용약관 텍스트를 호출
+            buildTermsContainer(context, termsText),
+            SizedBox(height: 16),
+            _buildCheckboxTile(
+              title: '개인정보 이용약관 동의 (필수)',
+              value: _privacyAgreed,
+              onChanged: (value) => setState(() => _privacyAgreed = value!),
+            ),
+            // 개인정보 처리방침 텍스트를 호출
+            buildTermsContainer(context, privacyText),
+            SizedBox(height: 24),
+            _buildButton(
+              text: '다음단계',
+              onPressed: (_termsAgreed && _privacyAgreed)
+                  ? () => setState(() => _currentStep = 1)
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
   Widget _buildInfoStep() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          TextFormField(
-            decoration: InputDecoration(labelText: '이름'),
-            validator: (value) => value!.isEmpty ? '이름을 입력해주세요' : null,
-            onChanged: (value) => setState(() => _name = value),
-          ),
-          Row(
+    return Card(
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surfaceVariant,
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: TextFormField(
-                  decoration: InputDecoration(labelText: '이메일'),
-                  validator: (value) => value!.isEmpty ? '이메일을 입력해주세요' : null,
-                  onChanged: (value) => setState(() {
-                    _email = value;
-                    _isEmailVerified = false;
-                  }),
-                ),
+              Text('회원정보', style: Theme.of(context).textTheme.titleLarge),
+              SizedBox(height: 16),
+              _buildTextField(
+                label: '이름',
+                onChanged: (value) => setState(() => _name = value),
+                validator: (value) => value!.isEmpty ? '이름을 입력해주세요' : null,
               ),
-              ElevatedButton(
-                child: Text('중복 확인'),
-                onPressed: _checkEmail,
+              SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      label: '이메일',
+                      onChanged: (value) => setState(() {
+                        _email = value;
+                        _isEmailVerified = false;
+                      }),
+                      validator: (value) => value!.isEmpty ? '이메일을 입력해주세요' : null,
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  ElevatedButton(
+                    child: Text('중복 확인'),
+                    onPressed: _checkEmail,
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16),
+              _buildTextField(
+                label: '비밀번호',
+                obscureText: true,
+                onChanged: (value) => setState(() => _password = value),
+                validator: (value) => value!.isEmpty ? '비밀번호를 입력해주세요' : null,
+              ),
+              SizedBox(height: 16),
+              _buildDateField(),
+              SizedBox(height: 24),
+              FilledButton(
+                onPressed: _signUp,
+                child: Text('가입완료'),
+                style: FilledButton.styleFrom(
+                  minimumSize: Size(double.infinity, 50),
+                ),
               ),
             ],
           ),
-          TextFormField(
-            decoration: InputDecoration(labelText: '비밀번호'),
-            obscureText: true,
-            validator: (value) => value!.isEmpty ? '비밀번호를 입력해주세요' : null,
-            onChanged: (value) => setState(() => _password = value),
-          ),
-          TextFormField(
-            decoration: InputDecoration(labelText: '생년월일'),
-            onTap: () async {
-              final date = await showDatePicker(
-                context: context,
-                initialDate: DateTime.now(),
-                firstDate: DateTime(1900),
-                lastDate: DateTime.now(),
-              );
-              if (date != null) {
-                setState(() => _birthDate = date);
-              }
-            },
-            readOnly: true,
-            controller: TextEditingController(
-              text: _birthDate != null
-                  ? DateFormat('yyyy-MM-dd').format(_birthDate!)
-                  : "",
-            ),
-            validator: (value) => value!.isEmpty ? '생년월일을 선택해주세요' : null,
-          ),
-          ElevatedButton(
-            child: Text('가입완료'),
-            onPressed: _signUp,
-          ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildCompletionStep() {
-    return Column(
-      children: [
-        Text('가입이 완료되었습니다!', style: Theme.of(context).textTheme.headlineSmall),
-        Text('가입해 주셔서 감사합니다. 더 나은 서비스로 보답하겠습니다.'),
-        ElevatedButton(
-          child: Text('로그인하기'),
-          onPressed: () {
-            // 모든 이전 라우트를 제거하고 로그인 페이지로 이동
-            Navigator.of(context).pushNamedAndRemoveUntil('/', (Route<dynamic> route) => false);
-          },
+    return Card(
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surfaceVariant,
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Icon(Icons.check_circle_outline,
+                size: 80,
+                color: Theme.of(context).colorScheme.primary),
+            SizedBox(height: 16),
+            Text('가입이 완료되었습니다!',
+                style: Theme.of(context).textTheme.headlineSmall),
+            SizedBox(height: 8),
+            Text('가입해 주셔서 감사합니다. 더 나은 서비스로 보답하겠습니다.'),
+            SizedBox(height: 24),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(context).pushNamedAndRemoveUntil('/', (Route<dynamic> route) => false);
+              },
+              child: Text('로그인하기'),
+              style: FilledButton.styleFrom(
+                minimumSize: Size(double.infinity, 50),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
+
+  Widget _buildCheckboxTile({required String title, required bool value, required Function(bool?) onChanged}) {
+    return CheckboxListTile(
+      title: Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
+      value: value,
+      onChanged: onChanged,
+      controlAffinity: ListTileControlAffinity.leading,
+      activeColor: Theme.of(context).colorScheme.primary,
+    );
+  }
+
+  Widget _buildTermsContainer(String content) {
+    return Container(
+      height: 100,
+      decoration: BoxDecoration(
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(8),
+        child: Text(content),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required String label,
+    bool obscureText = false,
+    required Function(String) onChanged,
+    required String? Function(String?) validator,
+  }) {
+    return TextFormField(
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.surface,
+      ),
+      obscureText: obscureText,
+      onChanged: onChanged,
+      validator: validator,
+    );
+  }
+
+  Widget _buildDateField() {
+    return TextFormField(
+      decoration: InputDecoration(
+        labelText: '생년월일',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.surface,
+        suffixIcon: Icon(Icons.calendar_today),
+      ),
+      onTap: () async {
+        final date = await showDatePicker(
+          context: context,
+          initialDate: DateTime.now(),
+          firstDate: DateTime(1900),
+          lastDate: DateTime.now(),
+        );
+        if (date != null) {
+          setState(() => _birthDate = date);
+        }
+      },
+      readOnly: true,
+      controller: TextEditingController(
+        text: _birthDate != null ? DateFormat('yyyy-MM-dd').format(_birthDate!) : "",
+      ),
+      validator: (value) => value!.isEmpty ? '생년월일을 선택해주세요' : null,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('회원가입')),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Stepper(
-                currentStep: _currentStep,
-                onStepTapped: (step) => setState(() => _currentStep = step),
-                steps: [
-                  Step(
-                    title: Text('약관동의'),
-                    content: _buildTermsStep(),
-                    isActive: _currentStep >= 0,
-                  ),
-                  Step(
-                    title: Text('회원정보'),
-                    content: _buildInfoStep(),
-                    isActive: _currentStep >= 1,
-                  ),
-                  Step(
-                    title: Text('가입완료'),
-                    content: _buildCompletionStep(),
-                    isActive: _currentStep >= 2,
-                  ),
-                ],
-              ),
-              if (_isLoading)
-                CircularProgressIndicator(),
-            ],
-          ),
+      appBar: AppBar(
+        title: Text('회원가입'),
+        elevation: 0,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
+      ),
+      body: SafeArea(
+        child: Stepper(
+          type: StepperType.horizontal,
+          currentStep: _currentStep,
+          onStepTapped: (step) => setState(() => _currentStep = step),
+          controlsBuilder: (context, details) => Container(),
+          steps: [
+            Step(
+              title: Text('약관동의'),
+              content: _buildTermsStep(),
+              isActive: _currentStep >= 0,
+              state: _currentStep > 0 ? StepState.complete : StepState.indexed,
+            ),
+            Step(
+              title: Text('회원정보'),
+              content: _buildInfoStep(),
+              isActive: _currentStep >= 1,
+              state: _currentStep > 1 ? StepState.complete : StepState.indexed,
+            ),
+            Step(
+              title: Text('가입완료'),
+              content: _buildCompletionStep(),
+              isActive: _currentStep >= 2,
+            ),
+          ],
         ),
       ),
     );
